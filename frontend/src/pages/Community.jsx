@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react';
 import Navbar from '../components/common/Navbar';
 import SectionHeader from '../components/common/SectionHeader';
 import { communityService } from '../services/communityService';
-import { FiHeart, FiShare2, FiUser, FiMapPin } from 'react-icons/fi';
+import { FiHeart, FiShare2, FiUser, FiMapPin, FiThumbsUp, FiMessageCircle, FiCopy } from 'react-icons/fi';
 
 export default function Community() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [toastMessage, setToastMessage] = useState('');
 
   useEffect(() => {
     fetchPosts();
@@ -32,10 +33,21 @@ export default function Community() {
     }
   };
 
+  const handleCloneTrip = (tripTitle) => {
+    setToastMessage(`Cloned "${tripTitle}" to your account!`);
+    setTimeout(() => setToastMessage(''), 3000);
+  };
+
   return (
     <div>
       <Navbar />
-      <div className="container section">
+      <div className="container section" style={{ position: 'relative' }}>
+        {toastMessage && (
+          <div className="toast toast-success" style={{ position: 'fixed', bottom: '20px', right: '20px', zIndex: 1000 }}>
+            {toastMessage}
+          </div>
+        )}
+
         <SectionHeader 
           title="Community Feed" 
           subtitle="Explore journeys shared by fellow travelers and get inspired." 
@@ -87,6 +99,13 @@ export default function Community() {
                   </button>
                   <button className="btn btn-ghost" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px' }}>
                     <FiShare2 /> Share
+                  </button>
+                  <button 
+                    className="btn btn-ghost" 
+                    style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px', marginLeft: 'auto' }}
+                    onClick={() => handleCloneTrip(post.trip?.name)}
+                  >
+                    <FiCopy /> Clone
                   </button>
                 </div>
               </div>

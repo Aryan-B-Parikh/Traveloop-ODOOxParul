@@ -1,89 +1,194 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { authService } from '../../services/authService';
+import { FiAlertCircle } from 'react-icons/fi';
+import { login, register } from '../../services/authService';
+import { useAuth } from '../../context/AuthContext';
 
 export default function AuthForm({ mode = 'login' }) {
   const navigate = useNavigate();
+  const { handleAuthSuccess } = useAuth();
+
   const [show, setShow] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    username: '',
+
+  // Controlled fields
+  const [fields, setFields] = useState({
     firstName: '',
     lastName: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
   });
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+  const set = (key) => (e) => setFields((prev) => ({ ...prev, [key]: e.target.value }));
 
-  const handleSubmit = async (e) => {
+  // ── Client-side validation ──────────────────────────────────────────────────
+  function validate() {
+    if (!fields.email.trim()) return 'Email is required.';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fields.email)) return 'Enter a valid email address.';
+    if (!fields.password) return 'Password is required.';
+    if (fields.password.length < 8) return 'Password must be at least 8 characters.';
+    if (mode === 'signup') {
+      if (!fields.firstName.trim()) return 'First name is required.';
+      if (!fields.lastName.trim()) return 'Last name is required.';
+      if (fields.password !== fields.confirmPassword) return 'Passwords do not match.';
+    }
+    return null;
+  }
+
+  // ── Submit ──────────────────────────────────────────────────────────────────
+  async function handleSubmit(e) {
     e.preventDefault();
-    setLoading(true);
     setError('');
 
+    const validationError = validate();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
+    setLoading(true);
     try {
+      let session;
       if (mode === 'login') {
-        await authService.login(formData.email, formData.password);
+        session = await login({ email: fields.email, password: fields.password });
       } else {
-        await authService.signup(formData);
+        session = await register({
+          firstName: fields.firstName,
+          lastName: fields.lastName,
+          email: fields.email,
+          password: fields.password,
+        });
       }
+      handleAuthSuccess(session);
       navigate('/dashboard');
     } catch (err) {
-      setError(err.message || 'Authentication failed');
+      setError(err.message || 'Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   return (
-    <form className="card" style={{ padding: '20px', display: 'grid', gap: 12 }} onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} style={{ display: 'grid', gap: 14 }} noValidate>
+      {/* Error banner */}
       {error && (
-        <div style={{ padding: '10px', background: 'var(--danger-light)', color: 'var(--danger)', borderRadius: '8px', fontSize: '14px' }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            padding: '10px 14px',
+            borderRadius: 8,
+            background: '#fef2f2',
+            border: '1px solid #fecaca',
+            color: '#991b1b',
+            fontSize: 13,
+            fontWeight: 500,
+          }}
+        >
+          <FiAlertCircle size={16} style={{ flexShrink: 0 }} />
           {error}
         </div>
       )}
 
+      {/* Name fields — signup only */}
       {mode === 'signup' && (
-        <>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-            <div>
-              <label className="muted" style={{ fontSize: '12px' }}>First Name</label>
-              <input className="input" name="firstName" value={formData.firstName} onChange={handleChange} placeholder="Maya" required />
-            </div>
-            <div>
-              <label className="muted" style={{ fontSize: '12px' }}>Last Name</label>
-              <input className="input" name="lastName" value={formData.lastName} onChange={handleChange} placeholder="Arora" required />
-            </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+          <div>
+            <label className="muted" style={{ fontSize: 13, display: 'block', marginBottom: 6 }}>First Name</label>
+            <input
+              className="input"
+              placeholder="First name"
+              value={fields.firstName}
+              onChange={set('firstName')}
+              required
+            />
           </div>
-          <label className="muted" style={{ fontSize: '12px' }}>Username</label>
-          <input className="input" name="username" value={formData.username} onChange={handleChange} placeholder="maya_travels" required />
-        </>
+          <div>
+            <label className="muted" style={{ fontSize: 13, display: 'block', marginBottom: 6 }}>Last Name</label>
+            <input
+              className="input"
+              placeholder="Last name"
+              value={fields.lastName}
+              onChange={set('lastName')}
+              required
+            />
+          </div>
+        </div>
       )}
 
-      <label className="muted" style={{ fontSize: '12px' }}>Email</label>
-      <input className="input" name="email" type="email" value={formData.email} onChange={handleChange} placeholder="hello@traveloop.com" required />
-
-      <label className="muted" style={{ fontSize: '12px' }}>Password</label>
-      <div style={{ display: 'flex', gap: 8 }}>
+      {/* Email */}
+      <div>
+        <label className="muted" style={{ fontSize: 13, display: 'block', marginBottom: 6 }}>Email</label>
         <input
           className="input"
-          name="password"
-          type={show ? 'text' : 'password'}
-          value={formData.password}
-          onChange={handleChange}
-          placeholder="••••••••"
+          type="email"
+          placeholder="hello@traveloop.com"
+          value={fields.email}
+          onChange={set('email')}
+          autoComplete="email"
           required
         />
-        <button type="button" className="btn btn-ghost" onClick={() => setShow(!show)}>
-          {show ? 'Hide' : 'Show'}
-        </button>
       </div>
 
-      <button className="btn btn-primary" type="submit" disabled={loading} style={{ marginTop: '12px' }}>
-        {loading ? 'Processing...' : mode === 'signup' ? 'Create account' : 'Sign in'}
+      {/* Password */}
+      <div>
+        <label className="muted" style={{ fontSize: 13, display: 'block', marginBottom: 6 }}>Password</label>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <input
+            className="input"
+            type={show ? 'text' : 'password'}
+            placeholder={mode === 'signup' ? 'Min. 8 characters' : 'Your password'}
+            value={fields.password}
+            onChange={set('password')}
+            autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
+            required
+            style={{ flex: 1 }}
+          />
+          <button
+            type="button"
+            className="btn btn-ghost"
+            onClick={() => setShow(!show)}
+            style={{ flexShrink: 0 }}
+          >
+            {show ? 'Hide' : 'Show'}
+          </button>
+        </div>
+      </div>
+
+      {/* Confirm password — signup only */}
+      {mode === 'signup' && (
+        <div>
+          <label className="muted" style={{ fontSize: 13, display: 'block', marginBottom: 6 }}>Confirm Password</label>
+          <input
+            className="input"
+            type={show ? 'text' : 'password'}
+            placeholder="Repeat password"
+            value={fields.confirmPassword}
+            onChange={set('confirmPassword')}
+            autoComplete="new-password"
+            required
+          />
+        </div>
+      )}
+
+      {/* Demo hint for login */}
+      {mode === 'login' && (
+        <p style={{ fontSize: 12, color: 'var(--muted)', margin: 0 }}>
+          Demo: <strong>maya@example.com</strong> / <strong>password123</strong>
+        </p>
+      )}
+
+      {/* Submit */}
+      <button
+        className="btn btn-primary"
+        type="submit"
+        disabled={loading}
+        style={{ marginTop: 4, position: 'relative' }}
+      >
+        {loading ? (mode === 'signup' ? 'Creating account…' : 'Signing in…') : (mode === 'signup' ? 'Create Account' : 'Sign In')}
       </button>
     </form>
   );

@@ -1,46 +1,98 @@
-import { apiRequest } from './api';
+import apiClient from './apiClient';
 
-export const authService = {
-  async login(email, password) {
-    const response = await apiRequest('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({ email, password }),
-    });
-    
-    if (response.data?.token) {
-      localStorage.setItem('traveloop_token', response.data.token);
-      localStorage.setItem('traveloop_user', JSON.stringify(response.data.user));
-    }
-    
-    return response.data;
-  },
+const SESSION_KEY = 'traveloop_session';
 
-  async signup(userData) {
-    const response = await apiRequest('/auth/signup', {
-      method: 'POST',
-      body: JSON.stringify(userData),
-    });
-    
-    if (response.data?.token) {
-      localStorage.setItem('traveloop_token', response.data.token);
-      localStorage.setItem('traveloop_user', JSON.stringify(response.data.user));
-    }
-    
-    return response.data;
-  },
-
-  logout() {
-    localStorage.removeItem('traveloop_token');
-    localStorage.removeItem('traveloop_user');
-    window.location.href = '/auth';
-  },
-
-  getCurrentUser() {
-    const user = localStorage.getItem('traveloop_user');
-    return user ? JSON.parse(user) : null;
-  },
-
-  isAuthenticated() {
-    return !!localStorage.getItem('traveloop_token');
+/** Retrieve the stored session from localStorage (or null). */
+export function getStoredSession() {
+  try {
+    const raw = localStorage.getItem(SESSION_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
   }
+}
+
+/** Persist a session object to localStorage. */
+function saveSession(session) {
+  localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+  localStorage.setItem('token', session.token); // Store token specifically for apiClient
+}
+
+/** Remove the session from localStorage. */
+export function clearSession() {
+  localStorage.removeItem(SESSION_KEY);
+  localStorage.removeItem('token');
+}
+
+/**
+ * Login with email + password.
+ * @returns {Promise<{ token: string, user: object }>}
+ */
+export async function login({ email, password }) {
+  try {
+    const response = await apiClient.post('/auth/login', { email, password });
+    const { user, token } = response.data.data;
+    const session = { token, user };
+    saveSession(session);
+    return session;
+  } catch (error) {
+    if (error.response && error.response.data && error.response.data.message) {
+      throw new Error(error.response.data.message);
+    }
+    throw new Error('An error occurred during login. Please try again.');
+  }
+}
+
+/**
+ * Register a new account.
+ * @returns {Promise<{ token: string, user: object }>}
+ */
+export async function register({ firstName, lastName, email, password }) {
+  try {
+    const username = email.split('@')[0];
+    const response = await apiClient.post('/auth/signup', { firstName, lastName, email, password, username });
+    const { user, token } = response.data.data;
+    const session = { token, user };
+    saveSession(session);
+    return session;
+  } catch (error) {
+    if (error.response && error.response.data && error.response.data.message) {
+      throw new Error(error.response.data.message);
+    }
+    throw new Error('An error occurred during registration. Please try again.');
+  }
+}
+
+/**
+ * Update the current user's profile.
+ * @returns {Promise<{ user: object }>}
+ */
+export async function updateProfile(updatedFields) {
+  try {
+    const response = await apiClient.put('/auth/profile', updatedFields);
+    const user = response.data.data;
+    
+    // Update local session
+    const session = getStoredSession();
+    if (session) {
+      const updatedSession = { ...session, user };
+      saveSession(updatedSession);
+    }
+
+    return { user };
+  } catch (error) {
+    if (error.response && error.response.data && error.response.data.message) {
+      throw new Error(error.response.data.message);
+    }
+    throw new Error('Failed to update profile.');
+  }
+}
+
+// Keep the old authService object for compatibility if needed, but pointing to the new functions
+export const authService = {
+  login: async (email, password) => login({ email, password }),
+  signup: async (userData) => register(userData),
+  logout: clearSession,
+  getCurrentUser: () => getStoredSession()?.user,
+  isAuthenticated: () => !!getStoredSession()?.token
 };
