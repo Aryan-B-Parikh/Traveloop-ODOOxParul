@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
@@ -6,6 +6,7 @@ import Landing from './pages/Landing';
 import Auth from './pages/Auth';
 import Dashboard from './pages/Dashboard';
 import CreateTrip from './pages/CreateTrip';
+import EditTrip from './pages/EditTrip';
 import DestinationExplorer from './pages/DestinationExplorer';
 import ItineraryBuilder from './pages/ItineraryBuilder';
 import BudgetPlanner from './pages/BudgetPlanner';
@@ -32,6 +33,7 @@ export default function App() {
         {/* Protected routes */}
         <Route path="/dashboard"  element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/create"     element={<ProtectedRoute><CreateTrip /></ProtectedRoute>} />
+        <Route path="/edit/:id"   element={<ProtectedRoute><EditTrip /></ProtectedRoute>} />
         <Route path="/explore"    element={<ProtectedRoute><DestinationExplorer /></ProtectedRoute>} />
         <Route path="/itinerary"  element={<ProtectedRoute><ItineraryBuilder /></ProtectedRoute>} />
         <Route path="/budget"     element={<ProtectedRoute><BudgetPlanner /></ProtectedRoute>} />

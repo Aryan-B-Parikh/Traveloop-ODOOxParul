@@ -5,7 +5,8 @@ export const sampleActivities = [
     city: 'Prague',
     cost: '$28',
     description: 'Guided walk with hidden alleys, folklore, and street food.',
-    category: 'Culture'
+    category: 'Culture',
+    tags: ['2 hrs', 'Small group', 'History']
   },
   {
     id: 2,
@@ -13,7 +14,8 @@ export const sampleActivities = [
     city: 'Cappadocia',
     cost: '$145',
     description: 'Balloon ride with breakfast and panoramic views.',
-    category: 'Adventure'
+    category: 'Adventure',
+    tags: ['4 hrs', 'Breathtaking', 'Early Morning']
   },
   {
     id: 3,
@@ -21,22 +23,25 @@ export const sampleActivities = [
     city: 'Tokyo',
     cost: '$65',
     description: 'Hands-on cooking class with local chef.',
-    category: 'Culture'
+    category: 'Culture',
+    tags: ['3 hrs', 'Food', 'Indoor']
   },
   {
     id: 4,
-    name: 'Sunset Catamaran Cruise',
+    name: 'Hidden Beaches Catamaran',
     city: 'Santorini',
     cost: '$120',
-    description: 'Sail the caldera with drinks, dinner, and swimming.',
-    category: 'Beach'
+    description: 'Sail around the caldera with snorkeling and BBQ.',
+    category: 'Beach',
+    tags: ['5 hrs', 'Water', 'Drinks included']
   },
   {
     id: 5,
     name: 'Rooftop Bar Crawl',
     city: 'Seoul',
-    cost: '$40',
-    description: 'Experience the best nightlife with local guides.',
-    category: 'Nightlife'
+    cost: '$45',
+    description: 'Experience the best nightlife with priority entry and welcome shots.',
+    category: 'Nightlife',
+    tags: ['4 hrs', 'Social', 'Evening']
   }
-]
+];

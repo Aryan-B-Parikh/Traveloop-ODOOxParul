@@ -31,6 +31,7 @@ export default function PackingChecklist() {
   };
 
   const progress = useMemo(() => {
+    if (items.length === 0) return 0;
     const packedCount = items.filter((item) => item.packed).length;
     return Math.round((packedCount / items.length) * 100);
   }, [items]);
@@ -88,6 +89,11 @@ export default function PackingChecklist() {
           </form>
 
           <div style={{ display: 'grid', gap: '24px' }}>
+            {Object.keys(groupedItems).length === 0 && (
+              <div className="muted" style={{ textAlign: 'center', padding: '40px 0' }}>
+                Your packing list is empty. Add some items above!
+              </div>
+            )}
             {Object.entries(groupedItems).map(([category, categoryItems]) => (
               <div key={category} className="card" style={{ padding: '20px' }}>
                 <h3 style={{ borderBottom: '1px solid var(--border)', paddingBottom: '10px', marginBottom: '10px' }}>
