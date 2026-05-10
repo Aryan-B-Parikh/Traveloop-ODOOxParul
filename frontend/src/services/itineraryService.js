@@ -19,10 +19,21 @@ export const deleteSection = async (tripId, sectionId) => {
   await apiClient.delete(`/trips/${tripId}/sections/${sectionId}`);
 };
 
-// Export as object for backward compatibility with my previous edits
+export const createActivity = async (tripId, sectionId, activityData) => {
+  const response = await apiClient.post(`/trips/${tripId}/sections/${sectionId}/activities`, activityData);
+  return response.data.data;
+};
+
+export const deleteActivity = async (tripId, sectionId, activityId) => {
+  await apiClient.delete(`/trips/${tripId}/sections/${sectionId}/activities/${activityId}`);
+};
+
+// Export as object for backward compatibility
 export const itineraryService = {
   getSections,
   createSection,
   updateSection,
-  deleteSection
+  deleteSection,
+  createActivity,
+  deleteActivity
 };

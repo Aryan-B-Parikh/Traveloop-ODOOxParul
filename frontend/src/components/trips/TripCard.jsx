@@ -1,5 +1,5 @@
-import React from 'react';
 import { FiTrash2 } from 'react-icons/fi';
+import { useNavigate } from 'react-router-dom';
 
 const statusToBadge = {
   Upcoming: 'badge-blue',
@@ -12,6 +12,7 @@ const statusToBadge = {
 const defaultImage = 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?q=80&w=600';
 
 export default function TripCard({ trip, onEdit, onDelete }) {
+  const navigate = useNavigate();
   const handleCardClick = () => {
     if (onEdit) onEdit(trip.id);
   };
@@ -61,21 +62,21 @@ export default function TripCard({ trip, onEdit, onDelete }) {
             <button 
               className="btn btn-ghost" 
               style={{ padding: '6px', fontSize: '11px' }}
-              onClick={(e) => { e.stopPropagation(); window.location.href = `/itinerary/${trip.id}`; }}
+              onClick={(e) => { e.stopPropagation(); navigate(`/itinerary/${trip.id}`); }}
             >
               Itinerary
             </button>
             <button 
               className="btn btn-ghost" 
               style={{ padding: '6px', fontSize: '11px' }}
-              onClick={(e) => { e.stopPropagation(); window.location.href = `/packing/${trip.id}`; }}
+              onClick={(e) => { e.stopPropagation(); navigate(`/packing/${trip.id}`); }}
             >
               Packing
             </button>
             <button 
               className="btn btn-ghost" 
               style={{ padding: '6px', fontSize: '11px' }}
-              onClick={(e) => { e.stopPropagation(); window.location.href = `/budget`; }}
+              onClick={(e) => { e.stopPropagation(); navigate(`/budget`); }}
             >
               Budget
             </button>
