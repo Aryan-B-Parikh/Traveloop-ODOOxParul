@@ -26,9 +26,9 @@ export default function Navbar() {
 
         <nav className="nav-links">
           <Link to="/explore">Explore</Link>
+          <Link to="/community">Community</Link>
           <Link to="/itinerary">Itinerary</Link>
           <Link to="/budget">Budget</Link>
-          <Link to="/community">Community</Link>
 
           {isAuthenticated ? (
             <button
@@ -105,6 +105,7 @@ export default function Navbar() {
                 { to: '/budget', label: 'Budget Planner' },
                 { to: '/packing', label: 'Packing Checklist' },
                 { to: '/notes', label: 'Trip Notes' },
+                { to: '/community', label: 'Community Feed' },
               ].map(({ to, label }) => (
                 <Link
                   key={to}

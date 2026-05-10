@@ -5,7 +5,7 @@ import DestinationCard from '../components/destinations/DestinationCard';
 import ActivityCard from '../components/itinerary/ActivityCard';
 import { sampleDestinations } from '../data/sampleDestinations';
 import { sampleActivities } from '../data/sampleActivities';
-import { getTrips, saveTrip } from '../data/tripStore';
+import { tripService } from '../services/tripService';
 import { FiCheck, FiX } from 'react-icons/fi';
 
 const CATEGORIES = ['All', 'Beach', 'Culture', 'Nightlife', 'Adventure'];
@@ -16,8 +16,12 @@ export default function DestinationExplorer() {
 
   // Modal and Toast State
   const [selectedActivity, setSelectedActivity] = useState(null);
-  const [trips] = useState(() => getTrips());
+  const [trips, setTrips] = useState([]);
   const [toastMessage, setToastMessage] = useState('');
+
+  React.useEffect(() => {
+    tripService.getTrips().then(setTrips).catch(console.error);
+  }, []);
 
   /* ── Derived State: Filtering ── */
   const lowerQuery = searchQuery.toLowerCase();

@@ -39,6 +39,7 @@ model User {
 model Trip {
   id                Int                @id @default(autoincrement())
   userId            Int
+  name              String             @db.VarChar(255)
   startDestination  String             @db.VarChar(255)
   returnPlace       String             @db.VarChar(255)
   startDate         DateTime

@@ -5,6 +5,7 @@ export const tripService = {
         const trip = await prisma.trip.create({
             data: {
                 userId,
+                name: tripData.name,
                 startDestination: tripData.startDestination,
                 returnPlace: tripData.returnPlace,
                 startDate: new Date(tripData.startDate),
@@ -66,6 +67,7 @@ export const tripService = {
         const updatedTrip = await prisma.trip.update({
             where: { id: tripId },
             data: {
+                ...(updateData.name && { name: updateData.name }),
                 ...(updateData.startDestination && { startDestination: updateData.startDestination }),
                 ...(updateData.returnPlace && { returnPlace: updateData.returnPlace }),
                 ...(updateData.startDate && { startDate: new Date(updateData.startDate) }),

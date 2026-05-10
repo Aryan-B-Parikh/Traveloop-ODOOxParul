@@ -87,3 +87,12 @@ export async function updateProfile(updatedFields) {
     throw new Error('Failed to update profile.');
   }
 }
+
+// Keep the old authService object for compatibility if needed, but pointing to the new functions
+export const authService = {
+  login: async (email, password) => login({ email, password }),
+  signup: async (userData) => register(userData),
+  logout: clearSession,
+  getCurrentUser: () => getStoredSession()?.user,
+  isAuthenticated: () => !!getStoredSession()?.token
+};

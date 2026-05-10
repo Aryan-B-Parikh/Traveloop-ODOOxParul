@@ -18,3 +18,22 @@ export const updateSection = async (tripId, sectionId, sectionData) => {
 export const deleteSection = async (tripId, sectionId) => {
   await apiClient.delete(`/trips/${tripId}/sections/${sectionId}`);
 };
+
+export const createActivity = async (tripId, sectionId, activityData) => {
+  const response = await apiClient.post(`/trips/${tripId}/sections/${sectionId}/activities`, activityData);
+  return response.data.data;
+};
+
+export const deleteActivity = async (tripId, sectionId, activityId) => {
+  await apiClient.delete(`/trips/${tripId}/sections/${sectionId}/activities/${activityId}`);
+};
+
+// Export as object for backward compatibility
+export const itineraryService = {
+  getSections,
+  createSection,
+  updateSection,
+  deleteSection,
+  createActivity,
+  deleteActivity
+};

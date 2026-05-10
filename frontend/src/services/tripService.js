@@ -1,4 +1,4 @@
-import apiClient from './apiClient';
+﻿import apiClient from './apiClient';
 
 /**
  * Fetch all trips for the authenticated user.
@@ -12,9 +12,12 @@ export const getTrips = async () => {
  * Fetch a single trip by ID.
  */
 export const getTrip = async (tripId) => {
-  const response = await apiClient.get(`/trips/${tripId}`);
+  const response = await apiClient.get(/trips/);
   return response.data.data;
 };
+
+// Alias for compatibility
+export const getTripById = getTrip;
 
 /**
  * Create a new trip.
@@ -28,7 +31,7 @@ export const createTrip = async (tripData) => {
  * Update an existing trip.
  */
 export const updateTrip = async (tripId, tripData) => {
-  const response = await apiClient.put(`/trips/${tripId}`, tripData);
+  const response = await apiClient.put(/trips/, tripData);
   return response.data.data;
 };
 
@@ -36,5 +39,15 @@ export const updateTrip = async (tripId, tripData) => {
  * Delete a trip.
  */
 export const deleteTrip = async (tripId) => {
-  await apiClient.delete(`/trips/${tripId}`);
+  await apiClient.delete(/trips/);
+};
+
+// Object export for compatibility with friend's code
+export const tripService = {
+  getTrips,
+  getTrip,
+  getTripById,
+  createTrip,
+  updateTrip,
+  deleteTrip
 };
