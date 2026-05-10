@@ -43,7 +43,7 @@ export default function TripCard({ trip, onEdit, onDelete }) {
         <img
           src={trip.image || defaultImage}
           alt={trip.name}
-          style={{ height: '160px', objectFit: 'cover', width: '100%' }}
+          style={{ height: '140px', objectFit: 'cover', width: '100%' }}
           onError={(e) => { e.target.src = defaultImage; }}
         />
         <div style={{ padding: '16px' }}>
@@ -54,29 +54,32 @@ export default function TripCard({ trip, onEdit, onDelete }) {
             </div>
           </div>
           <div className="muted" style={{ fontSize: 13, marginTop: '4px' }}>
-            {trip.destination} &bull; {trip.dates}
+            {trip.startDestination} &bull; {new Date(trip.startDate).toLocaleDateString()}
           </div>
-          <div style={{ marginTop: 8, fontSize: 14 }} className="muted">
-            {trip.description || trip.desc}
+          
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', marginTop: '16px' }}>
+            <button 
+              className="btn btn-ghost" 
+              style={{ padding: '6px', fontSize: '11px' }}
+              onClick={(e) => { e.stopPropagation(); window.location.href = `/itinerary/${trip.id}`; }}
+            >
+              Itinerary
+            </button>
+            <button 
+              className="btn btn-ghost" 
+              style={{ padding: '6px', fontSize: '11px' }}
+              onClick={(e) => { e.stopPropagation(); window.location.href = `/packing/${trip.id}`; }}
+            >
+              Packing
+            </button>
+            <button 
+              className="btn btn-ghost" 
+              style={{ padding: '6px', fontSize: '11px' }}
+              onClick={(e) => { e.stopPropagation(); window.location.href = `/budget`; }}
+            >
+              Budget
+            </button>
           </div>
-          {trip.participants && trip.participants.length > 0 && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0px', marginTop: '16px' }}>
-              {trip.participants.map((p, i) => (
-                <div
-                  key={i}
-                  className="avatar"
-                  style={{
-                    width: '32px',
-                    height: '32px',
-                    marginLeft: i > 0 ? '-8px' : '0',
-                    zIndex: trip.participants.length - i,
-                  }}
-                >
-                  <img src={p.avatar} alt={p.name} />
-                </div>
-              ))}
-            </div>
-          )}
         </div>
       </div>
     </div>

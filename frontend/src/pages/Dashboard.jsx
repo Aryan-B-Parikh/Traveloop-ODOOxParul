@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/common/Navbar';
 import SectionHeader from '../components/common/SectionHeader';
 import TripCard from '../components/trips/TripCard';
 import StatCard from '../components/ui/StatCard';
-import { getTrips, deleteTrip } from '../data/tripStore';
+import { tripService } from '../services/tripService';
 import { budgetSummary } from '../data/sampleBudget';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import { FiPlus } from 'react-icons/fi';
@@ -13,19 +13,39 @@ const COLORS = ['#2563eb', '#06b6d4', '#7c3aed', '#38bdf8', '#94a3b8'];
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const [trips, setTrips] = useState(() => getTrips());
+  const [trips, setTrips] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [deleteTarget, setDeleteTarget] = useState(null);
+
+  useEffect(() => {
+    fetchTrips();
+  }, []);
+
+  const fetchTrips = async () => {
+    try {
+      const data = await tripService.getTrips();
+      setTrips(data);
+    } catch (error) {
+      console.error('Failed to fetch trips:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   /* ── Delete flow ── */
   const handleDeleteRequest = (id) => {
     setDeleteTarget(id);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (deleteTarget) {
-      deleteTrip(deleteTarget);
-      setTrips(getTrips());
-      setDeleteTarget(null);
+      try {
+        await tripService.deleteTrip(deleteTarget);
+        setTrips(trips.filter(t => t.id !== deleteTarget));
+        setDeleteTarget(null);
+      } catch (error) {
+        console.error('Failed to delete trip:', error);
+      }
     }
   };
 
@@ -55,7 +75,11 @@ export default function Dashboard() {
             />
 
             {/* Trip list or empty state */}
-            {trips.length === 0 ? (
+            {loading ? (
+              <div style={{ padding: '40px', textAlign: 'center' }}>
+                <div className="muted">Loading your adventures...</div>
+              </div>
+            ) : trips.length === 0 ? (
               <div className="empty-state fade-up">
                 <div className="empty-state-icon">✈️</div>
                 <h3>No trips yet</h3>

@@ -1,16 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '../components/common/Navbar';
 import SectionHeader from '../components/common/SectionHeader';
-import { itinerarySections, tripMeta } from '../data/sampleItinerary';
+import { itineraryService } from '../services/itineraryService';
+import { tripService } from '../services/tripService';
 import { FiPlus, FiChevronUp, FiChevronDown, FiMapPin, FiCalendar, FiDollarSign, FiTrash2 } from 'react-icons/fi';
 
 /* ── Stat card matching BudgetCard pattern ── */
-function StatCard({ label, value, note }) {
+function StatCard({ label, value, note, children }) {
   return (
     <div className="card glass" style={{ padding: '20px' }}>
       <div className="stat-label">{label}</div>
       <div className="stat-value">{value}</div>
       <div className="stat-note">{note}</div>
+      {children}
     </div>
   );
 }
@@ -57,62 +60,61 @@ function ActivityRow({ activity, onMoveUp, onMoveDown, onRemove, isFirst, isLast
   );
 }
 
-/* ── Main page component ── */
 export default function ItineraryBuilder() {
-  const [sections, setSections] = useState(itinerarySections);
+  const { tripId } = useParams();
+  const navigate = useNavigate();
+  const [sections, setSections] = useState([]);
+  const [trip, setTrip] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  /* Derived stats */
-  const totalActivities = sections.reduce((sum, s) => sum + s.activities.length, 0);
-  const totalBudget = sections.reduce((sum, s) => sum + s.sectionBudget, 0);
-  const totalSpent = sections.reduce((sum, s) => s.activities.reduce((a, act) => a + act.cost, 0) + sum, 0);
+  useEffect(() => {
+    if (tripId) {
+      fetchData();
+    }
+  }, [tripId]);
 
-  /* ── Reorder: move activity up/down within a section ── */
-  const moveActivity = (sectionId, activityIndex, direction) => {
+  const fetchData = async () => {
     try {
-      setSections((prev) =>
-        prev.map((section) => {
-          if (section.sectionId !== sectionId) return section;
-          const updated = [...section.activities];
-          const targetIndex = activityIndex + direction;
-          if (targetIndex < 0 || targetIndex >= updated.length) return section;
-          [updated[activityIndex], updated[targetIndex]] = [updated[targetIndex], updated[activityIndex]];
-          return { ...section, activities: updated };
-        })
-      );
-    } catch (err) {
-      setError('Failed to reorder activity. Please try again.');
+      setLoading(true);
+      const [tripData, sectionsData] = await Promise.all([
+        tripService.getTripById(tripId),
+        itineraryService.getSections(tripId)
+      ]);
+      setTrip(tripData);
+      setSections(sectionsData);
+    } catch (error) {
+      console.error('Failed to fetch itinerary:', error);
+      setError('Failed to load itinerary. Please ensure the trip exists.');
+    } finally {
+      setLoading(false);
     }
   };
 
-  /* ── Remove activity ── */
-  const removeActivity = (sectionId, activityId) => {
+  /* ── Add a section ── */
+  const addSection = async () => {
     try {
-      setSections((prev) =>
-        prev.map((section) => {
-          if (section.sectionId !== sectionId) return section;
-          return { ...section, activities: section.activities.filter((a) => a.activityId !== activityId) };
-        })
-      );
-    } catch (err) {
-      setError('Failed to remove activity.');
-    }
-  };
-
-  /* ── Add a placeholder section ── */
-  const addSection = () => {
-    const newId = `s${Date.now()}`;
-    setSections((prev) => [
-      ...prev,
-      {
-        sectionId: newId,
-        tripId: tripMeta.tripId,
-        dateRange: 'Set dates',
+      const newSection = await itineraryService.createSection(tripId, {
         location: 'New Destination',
+        sectionDateStart: trip.startDate,
+        sectionDateEnd: trip.endDate,
         sectionBudget: 0,
-        activities: [],
-      },
-    ]);
+        description: '',
+      });
+      setSections([...sections, newSection]);
+    } catch (err) {
+      setError('Failed to create section.');
+    }
+  };
+
+  /* ── Remove section ── */
+  const removeSection = async (sectionId) => {
+    try {
+      await itineraryService.deleteSection(tripId, sectionId);
+      setSections(sections.filter(s => s.id !== sectionId));
+    } catch (err) {
+      setError('Failed to remove section.');
+    }
   };
 
   return (
@@ -122,13 +124,14 @@ export default function ItineraryBuilder() {
         <main>
           {/* ── Header ── */}
           <SectionHeader
-            title={`Itinerary: ${tripMeta.name}`}
+            title={`Itinerary: ${trip?.name || 'Loading...'}`}
             subtitle="Build your day-by-day travel plan with destinations, activities, and budgets."
             action={
               <button
                 className="btn btn-primary"
                 style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}
                 onClick={addSection}
+                disabled={loading}
               >
                 <FiPlus /> Add Section
               </button>
@@ -137,96 +140,91 @@ export default function ItineraryBuilder() {
 
           {/* ── Error Banner ── */}
           {error && (
-            <div
-              className="card"
-              style={{
-                padding: '14px 18px',
-                marginBottom: '18px',
-                background: '#fef2f2',
-                borderColor: '#fecaca',
-                color: '#991b1b',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-              }}
-            >
+            <div className="card" style={{ padding: '14px 18px', marginBottom: '18px', background: '#fef2f2', borderColor: '#fecaca', color: '#991b1b', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span>{error}</span>
-              <button
-                style={{ background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, color: '#991b1b' }}
-                onClick={() => setError(null)}
-              >
-                Dismiss
-              </button>
+              <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, color: '#991b1b' }} onClick={() => setError(null)}>Dismiss</button>
             </div>
           )}
 
-          {/* ── Summary Stat Cards ── */}
-          <div className="grid-3" style={{ marginBottom: '28px' }}>
-            <StatCard label="Destinations" value={sections.length} note={`${totalActivities} activities planned`} />
-            <StatCard
-              label="Budget Allocated"
-              value={`$${totalBudget.toLocaleString()}`}
-              note={`$${totalSpent.toLocaleString()} activity costs so far`}
-            />
-            <StatCard label="Budget Remaining" value={`$${(totalBudget - totalSpent).toLocaleString()}`} note="On track">
-              <div className="progress-bar" style={{ marginTop: '10px' }}>
-                <div
-                  className="progress-fill"
-                  style={{ width: totalBudget > 0 ? `${Math.min((totalSpent / totalBudget) * 100, 100)}%` : '0%' }}
-                />
-              </div>
-            </StatCard>
-          </div>
-
-          {/* ── Empty state or Timeline ── */}
-          {sections.length === 0 ? (
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: '40px' }}>
+              <div className="muted">Loading your itinerary...</div>
+            </div>
+          ) : sections.length === 0 ? (
             <EmptyState onAdd={addSection} />
           ) : (
-            <div className="itinerary-timeline fade-up">
-              {sections.map((section) => (
-                <div key={section.sectionId} className="itinerary-section">
-                  <div className="timeline-dot" />
-                  <div className="card glass" style={{ padding: '22px' }}>
-                    {/* Section header */}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '6px' }}>
-                      <h3 style={{ margin: 0 }}>{section.location}</h3>
-                    </div>
-                    <div className="section-meta">
-                      <span className="section-badge section-badge-date">
-                        <FiCalendar size={12} /> {section.dateRange}
-                      </span>
-                      <span className="section-badge section-badge-budget">
-                        <FiDollarSign size={12} /> ${section.sectionBudget.toLocaleString()}
-                      </span>
-                      <span className="section-badge section-badge-count">
-                        <FiMapPin size={12} /> {section.activities.length} stops
-                      </span>
-                    </div>
-
-                    {/* Activities list */}
-                    {section.activities.length === 0 ? (
-                      <div className="muted" style={{ fontSize: '13px', padding: '18px 0 4px', textAlign: 'center' }}>
-                        No activities yet — tap <strong>Add Section</strong> or drag activities here.
-                      </div>
-                    ) : (
-                      <div style={{ display: 'grid', gap: '10px', marginTop: '4px' }}>
-                        {section.activities.map((activity, idx) => (
-                          <ActivityRow
-                            key={activity.activityId}
-                            activity={activity}
-                            isFirst={idx === 0}
-                            isLast={idx === section.activities.length - 1}
-                            onMoveUp={() => moveActivity(section.sectionId, idx, -1)}
-                            onMoveDown={() => moveActivity(section.sectionId, idx, 1)}
-                            onRemove={() => removeActivity(section.sectionId, activity.activityId)}
-                          />
-                        ))}
-                      </div>
-                    )}
+            <>
+              {/* ── Summary Stat Cards ── */}
+              <div className="grid-3" style={{ marginBottom: '28px' }}>
+                <StatCard label="Destinations" value={sections.length} note={`${totalActivities} activities planned`} />
+                <StatCard
+                  label="Budget Allocated"
+                  value={`$${totalBudget.toLocaleString()}`}
+                  note={`$${totalSpent.toLocaleString()} activity costs so far`}
+                />
+                <StatCard label="Budget Remaining" value={`$${(totalBudget - totalSpent).toLocaleString()}`} note="On track">
+                  <div className="progress-bar" style={{ marginTop: '10px' }}>
+                    <div
+                      className="progress-fill"
+                      style={{ width: totalBudget > 0 ? `${Math.min((totalSpent / totalBudget) * 100, 100)}%` : '0%' }}
+                    />
                   </div>
-                </div>
-              ))}
-            </div>
+                </StatCard>
+              </div>
+
+              <div className="itinerary-timeline fade-up">
+                {sections.map((section) => (
+                  <div key={section.id} className="itinerary-section">
+                    <div className="timeline-dot" />
+                    <div className="card glass" style={{ padding: '22px' }}>
+                      {/* Section header */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '6px' }}>
+                        <h3 style={{ margin: 0 }}>{section.location}</h3>
+                        <button 
+                          className="btn btn-ghost" 
+                          style={{ color: 'var(--danger)', padding: '6px' }}
+                          onClick={() => removeSection(section.id)}
+                        >
+                          <FiTrash2 size={16} />
+                        </button>
+                      </div>
+                      <div className="section-meta">
+                        <span className="section-badge section-badge-date">
+                          <FiCalendar size={12} /> {new Date(section.sectionDateStart).toLocaleDateString()} - {new Date(section.sectionDateEnd).toLocaleDateString()}
+                        </span>
+                        <span className="section-badge section-badge-budget">
+                          <FiDollarSign size={12} /> ${section.sectionBudget?.toLocaleString() || 0}
+                        </span>
+                        <span className="section-badge section-badge-count">
+                          <FiMapPin size={12} /> {section.activities?.length || 0} stops
+                        </span>
+                      </div>
+
+                      {/* Activities list */}
+                      {(!section.activities || section.activities.length === 0) ? (
+                        <div className="muted" style={{ fontSize: '13px', padding: '18px 0 4px', textAlign: 'center' }}>
+                          No activities yet for this section.
+                        </div>
+                      ) : (
+                        <div style={{ display: 'grid', gap: '10px', marginTop: '4px' }}>
+                          {section.activities.map((activity, idx) => (
+                            <ActivityRow
+                              key={activity.id}
+                              activity={activity}
+                              isFirst={idx === 0}
+                              isLast={idx === section.activities.length - 1}
+                              onMoveUp={() => {}} // Reorder logic would need backend support
+                              onMoveDown={() => {}}
+                              onRemove={() => {}} // Activity removal would need backend support
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </main>
       </div>

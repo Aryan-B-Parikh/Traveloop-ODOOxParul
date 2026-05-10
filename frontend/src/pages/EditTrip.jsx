@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '../components/common/Navbar';
 import SectionHeader from '../components/common/SectionHeader';
-import { getTrip, saveTrip, deleteTrip, formatDateRange } from '../data/tripStore';
-import { FiPlus, FiTrash, FiCheck, FiAlertCircle } from 'react-icons/fi';
+import { tripService } from '../services/tripService';
+import { communityService } from '../services/communityService';
+import { FiPlus, FiTrash, FiCheck, FiAlertCircle, FiShare2 } from 'react-icons/fi';
 
 export default function EditTrip() {
   const { id } = useParams();
@@ -16,29 +17,39 @@ export default function EditTrip() {
   const [description, setDescription] = useState('');
   const [budget, setBudget] = useState('');
   const [destinations, setDestinations] = useState(['']);
-  const [status, setStatus] = useState('Draft');
+  const [status, setStatus] = useState('PLANNED');
   const [errors, setErrors] = useState({});
   const [toast, setToast] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showPublishModal, setShowPublishModal] = useState(false);
+  const [publishContent, setPublishContent] = useState('');
+  const [publishing, setPublishing] = useState(false);
 
   /* ── Load trip on mount ── */
   useEffect(() => {
-    const trip = getTrip(id);
-    if (!trip) {
-      setNotFound(true);
-      return;
-    }
-    setName(trip.name || '');
-    setStartDate(trip.startDate || '');
-    setEndDate(trip.endDate || '');
-    setDescription(trip.description || '');
-    setBudget(trip.budget ? String(trip.budget) : '');
-    setStatus(trip.status || 'Draft');
-    setDestinations(
-      trip.destination ? trip.destination.split(',').map((d) => d.trim()) : ['']
-    );
+    fetchTrip();
   }, [id]);
+
+  const fetchTrip = async () => {
+    try {
+      setLoading(true);
+      const trip = await tripService.getTripById(id);
+      setName(trip.name || '');
+      setStartDate(trip.startDate ? trip.startDate.split('T')[0] : '');
+      setEndDate(trip.endDate ? trip.endDate.split('T')[0] : '');
+      setDescription(trip.description || '');
+      setStatus(trip.status || 'PLANNED');
+      // For multi-city, we use startDestination as the primary for now
+      setDestinations([trip.startDestination, trip.returnPlace].filter((v, i, a) => v && a.indexOf(v) === i));
+    } catch (error) {
+      console.error('Failed to fetch trip:', error);
+      setNotFound(true);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   /* ── Destination list management ── */
   const addDestination = () => setDestinations([...destinations, '']);
@@ -61,36 +72,61 @@ export default function EditTrip() {
     if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
       errs.endDate = 'End date must be after start date';
     }
-    if (!destinations.some((d) => d.trim())) errs.destinations = 'At least one destination is required';
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
 
   /* ── Submit (update) ── */
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
 
-    saveTrip({
-      id,
-      name: name.trim(),
-      destination: destinations.filter((d) => d.trim()).join(', '),
-      startDate,
-      endDate,
-      dates: formatDateRange(startDate, endDate),
-      description: description.trim(),
-      budget: Number(budget) || 0,
-      status,
-    });
+    try {
+      const filteredDestinations = destinations.filter((d) => d.trim());
+      await tripService.updateTrip(id, {
+        name: name.trim(),
+        startDestination: filteredDestinations[0] || '',
+        returnPlace: filteredDestinations[filteredDestinations.length - 1] || filteredDestinations[0] || '',
+        startDate,
+        endDate,
+        description: description.trim(),
+        status,
+      });
 
-    setToast(true);
-    setTimeout(() => navigate('/dashboard'), 1200);
+      setToast(true);
+      setTimeout(() => navigate('/dashboard'), 1200);
+    } catch (error) {
+      console.error('Failed to update trip:', error);
+      setErrors({ submit: error.message || 'Update failed' });
+    }
   };
 
   /* ── Delete ── */
-  const handleDelete = () => {
-    deleteTrip(id);
-    navigate('/dashboard');
+  const handleDelete = async () => {
+    try {
+      await tripService.deleteTrip(id);
+      navigate('/dashboard');
+    } catch (error) {
+      console.error('Failed to delete trip:', error);
+    }
+  };
+
+  /* ── Publish to Community ── */
+  const handlePublish = async () => {
+    if (!publishContent.trim()) return;
+    setPublishing(true);
+    try {
+      await communityService.createPost(id, publishContent);
+      setShowPublishModal(false);
+      setPublishContent('');
+      setToast(true);
+      // Optional: redirect to community
+      setTimeout(() => navigate('/dashboard'), 1200);
+    } catch (error) {
+      console.error('Failed to publish trip:', error);
+    } finally {
+      setPublishing(false);
+    }
   };
 
   /* ── Not found state ── */
@@ -123,14 +159,24 @@ export default function EditTrip() {
             title="Edit Trip"
             subtitle="Update the details for your adventure."
             action={
-              <button
-                className="btn btn-danger"
-                type="button"
-                style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}
-                onClick={() => setShowDeleteModal(true)}
-              >
-                <FiTrash /> Delete Trip
-              </button>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button
+                  className="btn btn-ghost"
+                  type="button"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', border: '1px solid var(--primary)', color: 'var(--primary)' }}
+                  onClick={() => setShowPublishModal(true)}
+                >
+                  <FiShare2 /> Publish
+                </button>
+                <button
+                  className="btn btn-danger"
+                  type="button"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}
+                  onClick={() => setShowDeleteModal(true)}
+                >
+                  <FiTrash /> Delete
+                </button>
+              </div>
             }
           />
           <form
@@ -260,6 +306,38 @@ export default function EditTrip() {
         <div className="toast toast-success">
           <span className="toast-icon"><FiCheck /></span>
           Trip updated! Redirecting…
+        </div>
+      )}
+
+      {/* Publish Modal */}
+      {showPublishModal && (
+        <div className="modal-backdrop" onClick={() => setShowPublishModal(false)}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+            <h3>Publish to Community</h3>
+            <p className="muted" style={{ fontSize: '14px', marginBottom: '16px' }}>
+              Share your trip with the Traveloop community. Others will be able to see your itinerary and destinations.
+            </p>
+            <textarea
+              className="input"
+              rows="4"
+              placeholder="What makes this trip special? (e.g., Best street food spots in Tokyo...)"
+              value={publishContent}
+              onChange={(e) => setPublishContent(e.target.value)}
+              style={{ width: '100%', marginBottom: '16px' }}
+            />
+            <div className="modal-actions">
+              <button className="btn btn-ghost" onClick={() => setShowPublishModal(false)}>
+                Cancel
+              </button>
+              <button 
+                className="btn btn-primary" 
+                onClick={handlePublish}
+                disabled={publishing || !publishContent.trim()}
+              >
+                {publishing ? 'Publishing...' : 'Share Experience'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

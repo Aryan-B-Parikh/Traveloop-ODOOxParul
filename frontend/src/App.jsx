@@ -10,6 +10,7 @@ import ItineraryBuilder from './pages/ItineraryBuilder'
 import BudgetPlanner from './pages/BudgetPlanner'
 import PackingChecklist from './pages/PackingChecklist'
 import Profile from './pages/Profile'
+import Community from './pages/Community'
 
 export default function App() {
   return (
@@ -20,9 +21,11 @@ export default function App() {
       <Route path="/create" element={<CreateTrip />} />
       <Route path="/edit/:id" element={<EditTrip />} />
       <Route path="/explore" element={<DestinationExplorer />} />
-      <Route path="/itinerary" element={<ItineraryBuilder />} />
+      <Route path="/itinerary/:tripId" element={<ItineraryBuilder />} />
       <Route path="/budget" element={<BudgetPlanner />} />
       <Route path="/packing" element={<PackingChecklist />} />
+      <Route path="/packing/:tripId" element={<PackingChecklist />} />
+      <Route path="/community" element={<Community />} />
       <Route path="/profile" element={<Profile />} />
     </Routes>
   )

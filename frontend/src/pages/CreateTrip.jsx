@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/common/Navbar';
 import SectionHeader from '../components/common/SectionHeader';
-import { saveTrip, formatDateRange } from '../data/tripStore';
+import { tripService } from '../services/tripService';
 import { FiPlus, FiTrash, FiCheck } from 'react-icons/fi';
 
 export default function CreateTrip() {
@@ -45,26 +45,31 @@ export default function CreateTrip() {
   };
 
   /* ── Submit ── */
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
 
-    const trip = {
-      name: name.trim(),
-      destination: destinations.filter((d) => d.trim()).join(', '),
-      startDate,
-      endDate,
-      dates: formatDateRange(startDate, endDate),
-      description: description.trim(),
-      budget: Number(budget) || 0,
-      status: 'Draft',
-    };
+    try {
+      const filteredDestinations = destinations.filter((d) => d.trim());
+      const tripData = {
+        name: name.trim(),
+        startDestination: filteredDestinations[0] || '',
+        returnPlace: filteredDestinations[filteredDestinations.length - 1] || filteredDestinations[0] || '',
+        startDate,
+        endDate,
+        description: description.trim(),
+        status: 'PLANNED',
+      };
 
-    saveTrip(trip);
+      await tripService.createTrip(tripData);
 
-    // Show success toast, then redirect
-    setToast(true);
-    setTimeout(() => navigate('/dashboard'), 1200);
+      // Show success toast, then redirect
+      setToast(true);
+      setTimeout(() => navigate('/dashboard'), 1200);
+    } catch (error) {
+      console.error('Failed to create trip:', error);
+      setErrors({ submit: error.message || 'Failed to create trip' });
+    }
   };
 
   return (

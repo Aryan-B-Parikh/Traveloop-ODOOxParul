@@ -49,6 +49,10 @@ export const loginValidation = [
 ];
 
 export const tripValidation = [
+    body('name')
+        .trim()
+        .isLength({ min: 1 })
+        .withMessage('Trip name is required'),
     body('startDestination')
         .trim()
         .isLength({ min: 1 })

@@ -13,6 +13,7 @@ export default function Navbar() {
         </div>
         <nav className="nav-links">
           <Link to="/explore">Explore</Link>
+          <Link to="/community">Community</Link>
           <Link to="/itinerary">Itinerary</Link>
           <Link to="/budget">Budget</Link>
           <Link to="/profile">Profile</Link>
@@ -36,6 +37,7 @@ export default function Navbar() {
             <Link to="/create" className="muted" style={{ padding: '8px 12px', borderRadius: '8px', fontSize: '14px' }} onClick={() => setMenuOpen(false)}>Create Trip</Link>
             <Link to="/itinerary" className="muted" style={{ padding: '8px 12px', borderRadius: '8px', fontSize: '14px' }} onClick={() => setMenuOpen(false)}>Itinerary Builder</Link>
             <Link to="/explore" className="muted" style={{ padding: '8px 12px', borderRadius: '8px', fontSize: '14px' }} onClick={() => setMenuOpen(false)}>Destination Explorer</Link>
+            <Link to="/community" className="muted" style={{ padding: '8px 12px', borderRadius: '8px', fontSize: '14px' }} onClick={() => setMenuOpen(false)}>Community Feed</Link>
             <Link to="/budget" className="muted" style={{ padding: '8px 12px', borderRadius: '8px', fontSize: '14px' }} onClick={() => setMenuOpen(false)}>Budget Planner</Link>
             <Link to="/packing" className="muted" style={{ padding: '8px 12px', borderRadius: '8px', fontSize: '14px' }} onClick={() => setMenuOpen(false)}>Packing Checklist</Link>
             <Link to="/profile" className="muted" style={{ padding: '8px 12px', borderRadius: '8px', fontSize: '14px' }} onClick={() => setMenuOpen(false)}>Profile</Link>
