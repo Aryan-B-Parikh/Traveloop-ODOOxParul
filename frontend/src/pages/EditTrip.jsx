@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '../components/common/Navbar';
 import SectionHeader from '../components/common/SectionHeader';
-import { getTrip, saveTrip, deleteTrip, formatDateRange } from '../data/tripStore';
-import { FiPlus, FiTrash, FiCheck, FiAlertCircle } from 'react-icons/fi';
+import { getTrip as getLocalTrip, saveTrip as saveLocalTrip, deleteTrip as deleteLocalTrip, formatDateRange } from '../data/tripStore';
+import * as tripService from '../services/tripService';
+import { FiPlus, FiTrash, FiCheck, FiAlertCircle, FiLoader } from 'react-icons/fi';
 
 export default function EditTrip() {
   const { id } = useParams();
@@ -20,24 +21,50 @@ export default function EditTrip() {
   const [errors, setErrors] = useState({});
   const [toast, setToast] = useState(false);
   const [notFound, setNotFound] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   /* ── Load trip on mount ── */
   useEffect(() => {
-    const trip = getTrip(id);
-    if (!trip) {
-      setNotFound(true);
-      return;
-    }
-    setName(trip.name || '');
-    setStartDate(trip.startDate || '');
-    setEndDate(trip.endDate || '');
-    setDescription(trip.description || '');
-    setBudget(trip.budget ? String(trip.budget) : '');
-    setStatus(trip.status || 'Draft');
-    setDestinations(
-      trip.destination ? trip.destination.split(',').map((d) => d.trim()) : ['']
-    );
+    const fetchTrip = async () => {
+      try {
+        let trip;
+        if (id.startsWith('trip-')) {
+          trip = getLocalTrip(id);
+        } else {
+          trip = await tripService.getTrip(id);
+        }
+
+        if (!trip) {
+          setNotFound(true);
+          return;
+        }
+        setName(trip.startDestination || trip.name || '');
+        setStartDate(trip.startDate ? trip.startDate.split('T')[0] : '');
+        setEndDate(trip.endDate ? trip.endDate.split('T')[0] : '');
+        setDescription(trip.description || '');
+        setBudget(trip.budget ? String(trip.budget) : '');
+        setStatus(trip.status || 'Planned');
+        setDestinations(
+          trip.returnPlace ? trip.returnPlace.split(',').map((d) => d.trim()) : (trip.destination ? trip.destination.split(',').map((d) => d.trim()) : [''])
+        );
+      } catch (err) {
+        console.error(err);
+        const local = getLocalTrip(id);
+        if (local) {
+          setName(local.name || '');
+          setStartDate(local.startDate || '');
+          setEndDate(local.endDate || '');
+          setDestinations(local.destination ? local.destination.split(',').map((d) => d.trim()) : ['']);
+        } else {
+          setNotFound(true);
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchTrip();
   }, [id]);
 
   /* ── Destination list management ── */
@@ -67,30 +94,58 @@ export default function EditTrip() {
   };
 
   /* ── Submit (update) ── */
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
 
-    saveTrip({
-      id,
-      name: name.trim(),
-      destination: destinations.filter((d) => d.trim()).join(', '),
-      startDate,
-      endDate,
-      dates: formatDateRange(startDate, endDate),
-      description: description.trim(),
-      budget: Number(budget) || 0,
-      status,
-    });
+    setIsSaving(true);
+    try {
+      if (id.startsWith('trip-')) {
+        saveLocalTrip({
+          id,
+          name: name.trim(),
+          destination: destinations.filter((d) => d.trim()).join(', '),
+          startDate,
+          endDate,
+          dates: formatDateRange(startDate, endDate),
+          description: description.trim(),
+          budget: Number(budget) || 0,
+          status,
+        });
+      } else {
+        const payload = {
+          startDestination: name.trim(),
+          returnPlace: destinations.filter((d) => d.trim()).join(', '),
+          startDate: new Date(startDate).toISOString(),
+          endDate: new Date(endDate).toISOString(),
+          description: description.trim(),
+          status: status.toUpperCase(),
+        };
+        await tripService.updateTrip(id, payload);
+      }
 
-    setToast(true);
-    setTimeout(() => navigate('/dashboard'), 1200);
+      setToast(true);
+      setTimeout(() => navigate('/dashboard'), 1200);
+    } catch (err) {
+      console.error(err);
+      setErrors({ submit: 'Failed to update trip.' });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   /* ── Delete ── */
-  const handleDelete = () => {
-    deleteTrip(id);
-    navigate('/dashboard');
+  const handleDelete = async () => {
+    try {
+      if (id.startsWith('trip-')) {
+        deleteLocalTrip(id);
+      } else {
+        await tripService.deleteTrip(id);
+      }
+      navigate('/dashboard');
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   /* ── Not found state ── */
@@ -248,9 +303,10 @@ export default function EditTrip() {
               />
             </div>
 
-            <button className="btn btn-primary" type="submit" style={{ justifySelf: 'start', marginTop: '10px' }}>
-              Save Changes
+            <button className="btn btn-primary" type="submit" disabled={isSaving} style={{ justifySelf: 'start', marginTop: '10px' }}>
+              {isSaving ? <FiLoader className="spin" /> : 'Save Changes'}
             </button>
+            {errors.submit && <div className="field-error" style={{marginTop: 8}}>{errors.submit}</div>}
           </form>
         </main>
       </div>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import Navbar from '../components/common/Navbar';
 import SectionHeader from '../components/common/SectionHeader';
 import BudgetCard from '../components/budget/BudgetCard';
@@ -22,7 +23,8 @@ export default function BudgetPlanner() {
   const [showForm, setShowForm] = useState(false);
   const [error, setError] = useState(null);
 
-  const tripId = 1; // TODO: Get from URL
+  const { tripId: routeTripId } = useParams();
+  const tripId = routeTripId || 1; 
 
   useEffect(() => {
     const fetchExpenses = async () => {

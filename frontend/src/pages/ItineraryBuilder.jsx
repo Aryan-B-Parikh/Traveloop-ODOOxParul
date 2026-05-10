@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import Navbar from '../components/common/Navbar';
 import SectionHeader from '../components/common/SectionHeader';
 import { itinerarySections, tripMeta } from '../data/sampleItinerary';
@@ -209,7 +210,8 @@ export default function ItineraryBuilder() {
   const [deletingId, setDeletingId] = useState(null);     // section pending delete confirm
 
   // TODO: Get tripId from URL params once Trip Detail View is ready
-  const tripId = 1; 
+  const { tripId: routeTripId } = useParams();
+  const tripId = routeTripId || 1; 
 
   useEffect(() => {
     const fetchSections = async () => {

@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/common/Navbar';
 import SectionHeader from '../components/common/SectionHeader';
-import { saveTrip, formatDateRange } from '../data/tripStore';
-import { FiPlus, FiTrash, FiCheck } from 'react-icons/fi';
+import { formatDateRange } from '../data/tripStore';
+import * as tripService from '../services/tripService';
+import { FiPlus, FiTrash, FiCheck, FiLoader } from 'react-icons/fi';
 
 export default function CreateTrip() {
   const navigate = useNavigate();
@@ -17,6 +18,7 @@ export default function CreateTrip() {
   const [destinations, setDestinations] = useState(['']);
   const [errors, setErrors] = useState({});
   const [toast, setToast] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   /* ── Destination list management ── */
   const addDestination = () => setDestinations([...destinations, '']);
@@ -45,26 +47,32 @@ export default function CreateTrip() {
   };
 
   /* ── Submit ── */
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
 
-    const trip = {
-      name: name.trim(),
-      destination: destinations.filter((d) => d.trim()).join(', '),
-      startDate,
-      endDate,
-      dates: formatDateRange(startDate, endDate),
-      description: description.trim(),
-      budget: Number(budget) || 0,
-      status: 'Draft',
-    };
+    setIsSaving(true);
+    try {
+      const tripPayload = {
+        startDestination: name.trim(), // Using name as startDestination
+        returnPlace: destinations.filter((d) => d.trim()).join(', '),
+        startDate: new Date(startDate).toISOString(),
+        endDate: new Date(endDate).toISOString(),
+        description: description.trim(),
+        status: 'PLANNED'
+      };
 
-    saveTrip(trip);
+      await tripService.createTrip(tripPayload);
 
-    // Show success toast, then redirect
-    setToast(true);
-    setTimeout(() => navigate('/dashboard'), 1200);
+      // Show success toast, then redirect
+      setToast(true);
+      setTimeout(() => navigate('/dashboard'), 1200);
+    } catch (err) {
+      console.error(err);
+      setErrors({ submit: 'Failed to create trip. Please try again.' });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -185,9 +193,10 @@ export default function CreateTrip() {
               </div>
             </div>
 
-            <button className="btn btn-primary" type="submit" style={{ justifySelf: 'start', marginTop: '10px' }}>
-              Create & Continue
+            <button className="btn btn-primary" type="submit" disabled={isSaving} style={{ justifySelf: 'start', marginTop: '10px' }}>
+              {isSaving ? <FiLoader className="spin" /> : 'Create & Continue'}
             </button>
+            {errors.submit && <div className="field-error">{errors.submit}</div>}
           </form>
         </main>
       </div>

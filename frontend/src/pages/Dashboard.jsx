@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/common/Navbar';
 import SectionHeader from '../components/common/SectionHeader';
 import TripCard from '../components/trips/TripCard';
 import StatCard from '../components/ui/StatCard';
-import { getTrips, deleteTrip } from '../data/tripStore';
+import { getTrips as getLocalTrips, deleteTrip as deleteLocalTrip } from '../data/tripStore';
+import * as tripService from '../services/tripService';
 import { budgetSummary } from '../data/sampleBudget';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import { FiPlus } from 'react-icons/fi';
@@ -13,19 +14,43 @@ const COLORS = ['#2563eb', '#06b6d4', '#7c3aed', '#38bdf8', '#94a3b8'];
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const [trips, setTrips] = useState(() => getTrips());
+  const [trips, setTrips] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [deleteTarget, setDeleteTarget] = useState(null);
+
+  useEffect(() => {
+    const fetchTrips = async () => {
+      try {
+        const data = await tripService.getTrips();
+        setTrips(data || []);
+      } catch (err) {
+        console.error(err);
+        setTrips(getLocalTrips()); // Fallback to local
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchTrips();
+  }, []);
 
   /* ── Delete flow ── */
   const handleDeleteRequest = (id) => {
     setDeleteTarget(id);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (deleteTarget) {
-      deleteTrip(deleteTarget);
-      setTrips(getTrips());
-      setDeleteTarget(null);
+      try {
+        if (!String(deleteTarget).startsWith('trip-')) {
+          await tripService.deleteTrip(deleteTarget);
+        } else {
+          deleteLocalTrip(deleteTarget);
+        }
+        setTrips((prev) => prev.filter(t => t.id !== deleteTarget));
+        setDeleteTarget(null);
+      } catch (err) {
+        console.error(err);
+      }
     }
   };
 
@@ -109,7 +134,7 @@ export default function Dashboard() {
             <div className="card subtle-glass" style={{ padding: '18px', marginTop: '20px' }}>
               <h3>Quick Stats</h3>
               <div style={{ display: 'grid', gap: 12, marginTop: 12 }}>
-                <StatCard label="Active trips" value={String(trips.length)} hint={trips.length > 0 ? `Next: ${trips[0].name}` : 'Create one!'} />
+                <StatCard label="Active trips" value={String(trips.length)} hint={trips.length > 0 ? `Next: ${trips[0].startDestination || trips[0].name}` : 'Create one!'} />
                 <StatCard
                   label="Total budget"
                   value={`$${budgetSummary.total}`}

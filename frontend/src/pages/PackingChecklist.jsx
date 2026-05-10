@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useParams } from 'react-router-dom';
 import Navbar from '../components/common/Navbar';
 import SectionHeader from '../components/common/SectionHeader';
 import ChecklistItem from '../components/checklist/ChecklistItem';
@@ -6,6 +7,7 @@ import { checklistItems } from '../data/sampleChecklist';
 import { FiPlus } from 'react-icons/fi';
 
 export default function PackingChecklist() {
+  const { tripId } = useParams();
   const [items, setItems] = useState(checklistItems);
   const [newItem, setNewItem] = useState('');
 

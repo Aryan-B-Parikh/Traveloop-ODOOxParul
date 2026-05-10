@@ -48,17 +48,26 @@ export default function TripCard({ trip, onEdit, onDelete }) {
         />
         <div style={{ padding: '16px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ fontWeight: 700 }}>{trip.name}</div>
+            <div style={{ fontWeight: 700 }}>{trip.startDestination || trip.name}</div>
             <div className={`badge ${statusToBadge[trip.status] || 'badge-blue'}`}>
               {trip.status}
             </div>
           </div>
           <div className="muted" style={{ fontSize: 13, marginTop: '4px' }}>
-            {trip.destination} &bull; {trip.dates}
+            {trip.returnPlace || trip.destination} &bull; {trip.dates}
           </div>
           <div style={{ marginTop: 8, fontSize: 14 }} className="muted">
             {trip.description || trip.desc}
           </div>
+
+          {/* Action Links */}
+          <div style={{ marginTop: 16, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+             <a href={`/itinerary/${trip.id}`} onClick={(e) => { e.stopPropagation(); }} className="btn btn-ghost" style={{ padding: '4px 8px', fontSize: '11px' }}>🗺️ Itinerary</a>
+             <a href={`/budget/${trip.id}`} onClick={(e) => { e.stopPropagation(); }} className="btn btn-ghost" style={{ padding: '4px 8px', fontSize: '11px' }}>💰 Budget</a>
+             <a href={`/notes/${trip.id}`} onClick={(e) => { e.stopPropagation(); }} className="btn btn-ghost" style={{ padding: '4px 8px', fontSize: '11px' }}>📝 Notes</a>
+             <a href={`/packing/${trip.id}`} onClick={(e) => { e.stopPropagation(); }} className="btn btn-ghost" style={{ padding: '4px 8px', fontSize: '11px' }}>🎒 Packing</a>
+          </div>
+
           {trip.participants && trip.participants.length > 0 && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '0px', marginTop: '16px' }}>
               {trip.participants.map((p, i) => (
