@@ -1,0 +1,185 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                Int                @id @default(autoincrement())
+  username          String             @unique @db.VarChar(100)
+  email             String             @unique @db.VarChar(255)
+  password          String             @db.VarChar(255)
+  firstName         String             @db.VarChar(100)
+  lastName          String             @db.VarChar(100)
+  phoneNumber       String?            @db.VarChar(20)
+  city              String?            @db.VarChar(100)
+  country           String?            @db.VarChar(100)
+  additionalInfo    String?            @db.Text
+  profileImage      String?            @db.VarChar(500)
+  role              UserRole           @default(USER)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  trips             Trip[]
+  expenses          Expense[]
+  packingItems      PackingItem[]
+  tripNotes         TripNote[]
+  communityPosts    CommunityPost[]
+
+  @@index([email])
+  @@index([username])
+}
+
+model Trip {
+  id                Int                @id @default(autoincrement())
+  userId            Int
+  startDestination  String             @db.VarChar(255)
+  returnPlace       String             @db.VarChar(255)
+  startDate         DateTime
+  endDate           DateTime
+  status            TripStatus         @default(PLANNED)
+  description       String?            @db.Text
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  itinerarySections ItinerarySection[]
+  expenses          Expense[]
+  packingItems      PackingItem[]
+  tripNotes         TripNote[]
+  communityPosts    CommunityPost[]
+
+  @@index([userId])
+  @@index([status])
+}
+
+model ItinerarySection {
+  id                Int                @id @default(autoincrement())
+  tripId            Int
+  location          String             @db.VarChar(255)
+  sectionDateStart  DateTime
+  sectionDateEnd    DateTime
+  sectionBudget     Decimal            @default(0) @db.Decimal(10, 2)
+  description       String?            @db.Text
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  trip              Trip               @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  activities        Activity[]
+
+  @@index([tripId])
+}
+
+model Activity {
+  id                Int                @id @default(autoincrement())
+  sectionId         Int
+  name              String             @db.VarChar(255)
+  city              String             @db.VarChar(255)
+  description       String?            @db.Text
+  cost              Decimal            @default(0) @db.Decimal(10, 2)
+  duration          String?            @db.VarChar(100)
+  category          String?            @db.VarChar(100)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  section           ItinerarySection   @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+
+  @@index([sectionId])
+}
+
+model Expense {
+  id                Int                @id @default(autoincrement())
+  tripId            Int
+  userId            Int
+  category          ExpenseCategory
+  description       String             @db.VarChar(255)
+  quantity          Int                @default(1)
+  unitCost          Decimal            @db.Decimal(10, 2)
+  totalAmount       Decimal            @db.Decimal(10, 2)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  trip              Trip               @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([tripId])
+  @@index([userId])
+  @@index([category])
+}
+
+model PackingItem {
+  id                Int                @id @default(autoincrement())
+  tripId            Int
+  userId            Int
+  category          String             @db.VarChar(100)
+  itemName          String             @db.VarChar(255)
+  isChecked         Boolean            @default(false)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  trip              Trip               @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([tripId])
+  @@index([userId])
+}
+
+model TripNote {
+  id                Int                @id @default(autoincrement())
+  tripId            Int
+  userId            Int
+  content           String             @db.Text
+  tagType           String?            @db.VarChar(100)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  trip              Trip               @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([tripId])
+  @@index([userId])
+}
+
+model CommunityPost {
+  id                Int                @id @default(autoincrement())
+  userId            Int
+  tripId            Int
+  postContent       String             @db.Text
+  likes             Int                @default(0)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  trip              Trip               @relation(fields: [tripId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([tripId])
+  @@index([createdAt])
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum TripStatus {
+  PLANNED
+  ONGOING
+  COMPLETED
+  CANCELLED
+}
+
+enum ExpenseCategory {
+  ACCOMMODATION
+  TRANSPORTATION
+  FOOD
+  ACTIVITIES
+  SHOPPING
+  MISCELLANEOUS
+}
