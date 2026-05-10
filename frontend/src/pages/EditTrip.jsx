@@ -113,7 +113,8 @@ export default function EditTrip() {
           status,
         });
       } else {
-        const payload = {
+         const payload = {
+          name: name.trim(),
           startDestination: name.trim(),
           returnPlace: destinations.filter((d) => d.trim()).join(', '),
           startDate: new Date(startDate).toISOString(),
@@ -293,7 +294,7 @@ export default function EditTrip() {
 
             {/* Budget */}
             <div style={{ maxWidth: '340px' }}>
-              <label className="muted">Budget (USD)</label>
+              <label className="muted">Budget (₹)</label>
               <input
                 className="input"
                 type="number"

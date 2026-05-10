@@ -54,7 +54,7 @@ export default function Landing() {
               <Link to="/create" className="btn btn-primary" style={{ padding: '14px 28px', fontSize: '16px' }}>
                 Start Planning for Free
               </Link>
-              <Link to="/explore" className="btn btn-ghost" style={{ padding: '14px 28px', fontSize: '16px' }}>
+              <Link to="/destination-explorer" className="btn btn-ghost" style={{ padding: '14px 28px', fontSize: '16px' }}>
                 Explore Destinations
               </Link>
             </div>

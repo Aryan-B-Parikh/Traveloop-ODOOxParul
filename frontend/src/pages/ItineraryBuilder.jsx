@@ -49,7 +49,7 @@ function ActivityRow({ activity, onMoveUp, onMoveDown, onRemove, isFirst, isLast
           <div className="activity-desc">{activity.city} — {activity.description}</div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
-          <div className="tag tag-purple">${activity.cost}</div>
+          <div className="tag tag-purple">₹{activity.cost}</div>
           <div className="activity-actions">
             <button title="Move up" onClick={onMoveUp} disabled={isFirst} style={isFirst ? { opacity: 0.3, cursor: 'default' } : {}}>
               <FiChevronUp />
@@ -128,7 +128,7 @@ function SectionEditor({ section, onSave, onCancel }) {
         {/* Budget */}
         <div>
           <label className="muted" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>
-            <FiDollarSign size={11} style={{ marginRight: 4 }} />Section Budget ($)
+            <span style={{ marginRight: 4 }}>₹</span>Section Budget (₹)
           </label>
           <input
             className="input"
@@ -395,10 +395,10 @@ export default function ItineraryBuilder() {
             <StatCard label="Destinations" value={sections.length} note={`${totalActivities} activities planned`} />
             <StatCard
               label="Budget Allocated"
-              value={`$${totalBudget.toLocaleString()}`}
-              note={`$${totalSpent.toLocaleString()} activity costs so far`}
+              value={`₹${totalBudget.toLocaleString()}`}
+              note={`₹${totalSpent.toLocaleString()} activity costs so far`}
             />
-            <StatCard label="Budget Remaining" value={`$${(totalBudget - totalSpent).toLocaleString()}`} note="On track">
+            <StatCard label="Budget Remaining" value={`₹${(totalBudget - totalSpent).toLocaleString()}`} note="On track">
               <div className="progress-bar" style={{ marginTop: '10px' }}>
                 <div
                   className="progress-fill"
@@ -510,7 +510,7 @@ export default function ItineraryBuilder() {
                         <FiCalendar size={12} /> {section.dateRange}
                       </span>
                       <span className="section-badge section-badge-budget">
-                        <FiDollarSign size={12} /> ${section.sectionBudget.toLocaleString()}
+                        <span style={{ marginRight: 4 }}>₹</span> {section.sectionBudget.toLocaleString()}
                       </span>
                       <span className="section-badge section-badge-count">
                         <FiMapPin size={12} /> {section.activities.length} stops

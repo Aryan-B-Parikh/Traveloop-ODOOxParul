@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { FiTrash2 } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 
@@ -40,17 +40,17 @@ export default function TripCard({ trip, onEdit, onDelete }) {
         </button>
       )}
 
-      <div className="card">
+      <div className="card" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
         <img
-          src={trip.image || defaultImage}
+          src={trip.coverImage || trip.image || defaultImage}
           alt={trip.startDestination || trip.name}
           style={{ height: '140px', objectFit: 'cover', width: '100%' }}
           onError={(e) => { e.target.src = defaultImage; }}
         />
-        <div style={{ padding: '16px' }}>
+        <div style={{ padding: '16px', flex: 1, display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ fontWeight: 700 }}>{trip.startDestination || trip.name}</div>
-            <div className={adge }>
+            <div className={`badge ${statusToBadge[trip.status] || 'badge-blue'}`}>
               {trip.status}
             </div>
           </div>
@@ -58,32 +58,32 @@ export default function TripCard({ trip, onEdit, onDelete }) {
             {trip.returnPlace || trip.destination} &bull; {trip.dates || new Date(trip.startDate).toLocaleDateString()}
           </div>
           
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '16px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: 'auto', paddingTop: '16px' }}>
             <button 
               className="btn btn-ghost" 
               style={{ padding: '6px', fontSize: '11px' }}
-              onClick={(e) => { e.stopPropagation(); navigate(/itinerary/); }}
+              onClick={(e) => { e.stopPropagation(); navigate(`/itinerary/${trip.id}`); }}
             >
               🗺️ Itinerary
             </button>
             <button 
               className="btn btn-ghost" 
               style={{ padding: '6px', fontSize: '11px' }}
-              onClick={(e) => { e.stopPropagation(); navigate(/packing/); }}
+              onClick={(e) => { e.stopPropagation(); navigate(`/packing/${trip.id}`); }}
             >
               🎒 Packing
             </button>
             <button 
               className="btn btn-ghost" 
               style={{ padding: '6px', fontSize: '11px' }}
-              onClick={(e) => { e.stopPropagation(); navigate(/budget/); }}
+              onClick={(e) => { e.stopPropagation(); navigate(`/budget/${trip.id}`); }}
             >
               💰 Budget
             </button>
             <button 
               className="btn btn-ghost" 
               style={{ padding: '6px', fontSize: '11px' }}
-              onClick={(e) => { e.stopPropagation(); navigate(/notes/); }}
+              onClick={(e) => { e.stopPropagation(); navigate(`/notes/${trip.id}`); }}
             >
               📝 Notes
             </button>

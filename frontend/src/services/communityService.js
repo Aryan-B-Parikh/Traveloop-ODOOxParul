@@ -1,4 +1,4 @@
-﻿import apiClient from './apiClient';
+import apiClient from './apiClient';
 
 export const communityService = {
   async getPosts() {
@@ -12,12 +12,12 @@ export const communityService = {
   },
 
   async likePost(postId) {
-    const response = await apiClient.post(/community//like);
+    const response = await apiClient.post(`/community/${postId}/like`);
     return response.data.data;
   },
 
   async deletePost(postId) {
-    const response = await apiClient.delete(/community/);
+    const response = await apiClient.delete(`/community/${postId}`);
     return response.data.data;
   }
 };

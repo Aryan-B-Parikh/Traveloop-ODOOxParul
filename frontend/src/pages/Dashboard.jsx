@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import Navbar from '../components/common/Navbar';
 import SectionHeader from '../components/common/SectionHeader';
 import TripCard from '../components/trips/TripCard';
@@ -7,13 +8,14 @@ import StatCard from '../components/ui/StatCard';
 import { getTrips as getLocalTrips, deleteTrip as deleteLocalTrip } from '../data/tripStore';
 import * as tripService from '../services/tripService';
 import { budgetSummary } from '../data/sampleBudget';
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { FiPlus } from 'react-icons/fi';
 
 const COLORS = ['#2563eb', '#06b6d4', '#7c3aed', '#38bdf8', '#94a3b8'];
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [trips, setTrips] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [deleteTarget, setDeleteTarget] = useState(null);
@@ -66,7 +68,7 @@ export default function Dashboard() {
         <div className="layout-asymmetric">
           <main>
             <SectionHeader
-              title="Welcome back, Maya"
+              title={`Welcome back, ${user?.firstName || 'Traveler'}`}
               subtitle="Your upcoming adventures and planning insights."
               action={
                 <button
@@ -109,8 +111,9 @@ export default function Dashboard() {
 
           <aside>
             <div className="card subtle-glass" style={{ padding: '18px' }}>
-              <h3>Budget Breakdown</h3>
-              <div style={{ height: 240 }}>
+              <h3>Global Budget Breakdown</h3>
+              <p className="muted" style={{ fontSize: '12px' }}>Total across all active trips</p>
+              <div style={{ height: 300 }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
@@ -127,6 +130,7 @@ export default function Dashboard() {
                       ))}
                     </Pie>
                     <Tooltip />
+                    <Legend verticalAlign="bottom" height={36} iconType="circle" />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
@@ -137,12 +141,12 @@ export default function Dashboard() {
                 <StatCard label="Active trips" value={String(trips.length)} hint={trips.length > 0 ? `Next: ${trips[0].startDestination || trips[0].name}` : 'Create one!'} />
                 <StatCard
                   label="Total budget"
-                  value={`$${budgetSummary.total}`}
+                  value={`₹${budgetSummary.total}`}
                   hint="Across active trips"
                 />
                 <StatCard
                   label="Spent so far"
-                  value={`$${budgetSummary.spent}`}
+                  value={`₹${budgetSummary.spent}`}
                   hint="Updated 4 mins ago"
                 />
               </div>

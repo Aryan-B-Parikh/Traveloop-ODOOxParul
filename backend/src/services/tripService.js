@@ -11,6 +11,7 @@ export const tripService = {
                 startDate: new Date(tripData.startDate),
                 endDate: new Date(tripData.endDate),
                 description: tripData.description || null,
+                coverImage: tripData.coverImage || null,
             },
         });
 
@@ -74,6 +75,7 @@ export const tripService = {
                 ...(updateData.endDate && { endDate: new Date(updateData.endDate) }),
                 ...(updateData.description !== undefined && { description: updateData.description }),
                 ...(updateData.status && { status: updateData.status }),
+                ...(updateData.coverImage !== undefined && { coverImage: updateData.coverImage }),
             },
             include: {
                 itinerarySections: true,

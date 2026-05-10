@@ -21,7 +21,7 @@ model User {
   city              String?            @db.VarChar(100)
   country           String?            @db.VarChar(100)
   additionalInfo    String?            @db.Text
-  profileImage      String?            @db.VarChar(500)
+  profileImage      String?            @db.Text
   role              UserRole           @default(USER)
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
@@ -46,6 +46,7 @@ model Trip {
   endDate           DateTime
   status            TripStatus         @default(PLANNED)
   description       String?            @db.Text
+  coverImage        String?            @db.Text
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
 

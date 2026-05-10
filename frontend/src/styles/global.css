@@ -162,6 +162,15 @@ img {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 18px;
+  align-items: stretch;
+}
+
+.trip-card-wrapper {
+  position: relative;
+  cursor: pointer;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .grid-4 {
@@ -689,7 +698,6 @@ img {
 /* ── Trip Card Overlay ── */
 .trip-card-wrapper {
   position: relative;
-  cursor: pointer;
 }
 
 .trip-card-overlay {

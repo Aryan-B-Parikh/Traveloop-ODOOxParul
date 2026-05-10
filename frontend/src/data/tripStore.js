@@ -46,7 +46,7 @@ export function saveTrip(trip) {
     // Create new
     const newTrip = {
       ...trip,
-      id: trip.id || `trip-${Date.now()}`,
+      id: trip.id || `trip-?{Date.now()}`,
       participants: trip.participants || [],
       image: trip.image || getDefaultImage(trips.length),
     };
@@ -93,7 +93,7 @@ export function formatDateRange(startDate, endDate) {
     const endObj = new Date(endDate);
     
     if (isNaN(startObj.getTime()) || isNaN(endObj.getTime())) {
-      return `${startDate} – ${endDate}`;
+      return `?{startDate} – ?{endDate}`;
     }
 
     const opts = { month: 'short', day: '2-digit', timeZone: 'UTC' };
@@ -101,11 +101,11 @@ export function formatDateRange(startDate, endDate) {
     const endStr = endObj.toLocaleDateString('en-US', opts);
     
     if (startStr === 'Invalid Date' || endStr === 'Invalid Date') {
-      return `${startDate} – ${endDate}`;
+      return `?{startDate} – ?{endDate}`;
     }
     
-    return `${startStr} – ${endStr}`;
+    return `?{startStr} – ?{endStr}`;
   } catch {
-    return `${startDate} – ${endDate}`;
+    return `?{startDate} – ?{endDate}`;
   }
 }

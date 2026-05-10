@@ -25,10 +25,10 @@ export default function Navbar() {
         </Link>
 
         <nav className="nav-links">
-          <Link to="/explore">Explore</Link>
+          <Link to="/dashboard">Dashboard</Link>
+          <Link to="/destination-explorer">Explore</Link>
           <Link to="/community">Community</Link>
-          <Link to="/itinerary">Itinerary</Link>
-          <Link to="/budget">Budget</Link>
+          <Link to="/admin">Admin Panel</Link>
 
           {isAuthenticated ? (
             <button
@@ -38,7 +38,7 @@ export default function Navbar() {
               title={user?.firstName ?? 'Account'}
             >
               <img
-                src={user?.avatar ?? 'https://i.pravatar.cc/150?img=32'}
+                src={user?.profileImage ?? 'https://i.pravatar.cc/150?img=32'}
                 alt={user?.firstName ?? 'User'}
               />
               <FiChevronDown size={14} style={{ color: 'var(--muted)' }} />
@@ -98,14 +98,12 @@ export default function Navbar() {
             {/* Nav links */}
             <nav style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               {[
-                { to: '/dashboard', label: 'Dashboard' },
-                { to: '/create', label: 'Create Trip' },
-                { to: '/itinerary', label: 'Itinerary Builder' },
-                { to: '/explore', label: 'Destination Explorer' },
-                { to: '/budget', label: 'Budget Planner' },
-                { to: '/packing', label: 'Packing Checklist' },
-                { to: '/notes', label: 'Trip Notes' },
-                { to: '/community', label: 'Community Feed' },
+                { to: '/dashboard', label: '📊 Dashboard Hub' },
+                { to: '/create', label: '➕ Plan New Trip' },
+                { to: '/destination-explorer', label: '🔍 Explore Cities' },
+                { to: '/community', label: '🌎 Travel Community' },
+                { to: '/profile', label: '👤 My Profile' },
+                { to: '/admin', label: '⚙️ Admin Dashboard' },
               ].map(({ to, label }) => (
                 <Link
                   key={to}

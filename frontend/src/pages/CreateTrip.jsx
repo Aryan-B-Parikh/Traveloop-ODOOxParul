@@ -15,6 +15,7 @@ export default function CreateTrip() {
   const [endDate, setEndDate] = useState('');
   const [description, setDescription] = useState('');
   const [budget, setBudget] = useState('');
+  const [coverImage, setCoverImage] = useState(null);
   const [destinations, setDestinations] = useState(['']);
   const [errors, setErrors] = useState({});
   const [toast, setToast] = useState(false);
@@ -30,6 +31,17 @@ export default function CreateTrip() {
   const removeDestination = (index) => {
     if (destinations.length <= 1) return;
     setDestinations(destinations.filter((_, i) => i !== index));
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setCoverImage(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   /* ── Validation ── */
@@ -54,11 +66,13 @@ export default function CreateTrip() {
     setIsSaving(true);
     try {
       const tripPayload = {
-        startDestination: name.trim(), // Using name as startDestination
+        name: name.trim(),
+        startDestination: name.trim(), // Using name as startDestination as well
         returnPlace: destinations.filter((d) => d.trim()).join(', '),
         startDate: new Date(startDate).toISOString(),
         endDate: new Date(endDate).toISOString(),
         description: description.trim(),
+        coverImage,
         status: 'PLANNED'
       };
 
@@ -178,7 +192,7 @@ export default function CreateTrip() {
             {/* Budget + Cover */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
               <div>
-                <label className="muted">Budget (USD)</label>
+                <label className="muted">Budget (₹)</label>
                 <input
                   className="input"
                   type="number"
@@ -189,7 +203,12 @@ export default function CreateTrip() {
               </div>
               <div>
                 <label className="muted">Cover Image</label>
-                <input className="input" type="file" />
+                <input 
+                  className="input" 
+                  type="file" 
+                  accept="image/*"
+                  onChange={handleFileChange}
+                />
               </div>
             </div>
 

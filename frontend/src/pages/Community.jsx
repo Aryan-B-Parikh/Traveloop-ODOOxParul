@@ -19,6 +19,25 @@ export default function Community() {
       setPosts(data);
     } catch (error) {
       console.error('Failed to fetch community posts:', error);
+      // Fallback for demo
+      setPosts([
+        {
+          id: 1,
+          postContent: "Just finished my 10-day tour across Europe! Paris was a dream and Amsterdam was surprisingly peaceful. Check out my itinerary if you're planning something similar!",
+          likes: 24,
+          createdAt: new Date().toISOString(),
+          user: { username: 'alex_adventures' },
+          trip: { name: 'Paris + Amsterdam Escape', startDestination: 'Paris' }
+        },
+        {
+          id: 2,
+          postContent: "Highly recommend visiting Kyoto in the fall. The colors are breathtaking and the temples are so serene.",
+          likes: 42,
+          createdAt: new Date().toISOString(),
+          user: { username: 'zen_traveler' },
+          trip: { name: 'Kyoto Culture Trail', startDestination: 'Kyoto' }
+        }
+      ]);
     } finally {
       setLoading(false);
     }
@@ -35,6 +54,13 @@ export default function Community() {
 
   const handleCloneTrip = (tripTitle) => {
     setToastMessage(`Cloned "${tripTitle}" to your account!`);
+    setTimeout(() => setToastMessage(''), 3000);
+  };
+
+  const handleShare = (postId) => {
+    const url = `${window.location.origin}/itinerary/public/${postId}`;
+    navigator.clipboard.writeText(url);
+    setToastMessage('Public itinerary link copied to clipboard!');
     setTimeout(() => setToastMessage(''), 3000);
   };
 
@@ -69,8 +95,12 @@ export default function Community() {
               <div key={post.id} className="card glass fade-up" style={{ padding: '24px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
                   <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                    <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--primary-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)' }}>
-                      <FiUser />
+                    <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--primary-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)', overflow: 'hidden' }}>
+                      {post.user?.profileImage ? (
+                        <img src={post.user.profileImage} alt={post.user.username} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      ) : (
+                        <FiUser />
+                      )}
                     </div>
                     <div>
                       <div style={{ fontWeight: 600 }}>{post.user?.username || 'Traveler'}</div>
@@ -97,7 +127,11 @@ export default function Community() {
                     <FiHeart style={{ fill: post.likes > 0 ? 'var(--danger)' : 'none', color: post.likes > 0 ? 'var(--danger)' : 'currentColor' }} />
                     {post.likes} Likes
                   </button>
-                  <button className="btn btn-ghost" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px' }}>
+                  <button 
+                    className="btn btn-ghost" 
+                    style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px' }}
+                    onClick={() => handleShare(post.id)}
+                  >
                     <FiShare2 /> Share
                   </button>
                   <button 

@@ -64,6 +64,24 @@ export default function Profile() {
     }
   }
 
+  // ── Avatar upload ───────────────────────────────────────────────────────────
+  const handleAvatarChange = async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const base64 = reader.result;
+        try {
+          const { user: updated } = await updateProfile({ profileImage: base64 });
+          updateUser(updated);
+        } catch (err) {
+          console.error('Failed to update avatar:', err);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   function StatusBadge({ status }) {
     if (!status) return null;
     if (status === 'saving') return <span style={{ fontSize: 13, color: 'var(--muted)' }}>Saving…</span>;
@@ -89,17 +107,22 @@ export default function Profile() {
 
           {/* Avatar card */}
           <div className="card glass" style={{ padding: '28px', display: 'flex', alignItems: 'center', gap: '24px', marginBottom: '24px' }}>
-            <div className="avatar" style={{ width: '80px', height: '80px' }}>
-              <img src={user?.avatar ?? 'https://i.pravatar.cc/150?img=32'} alt={user?.firstName} />
+            <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'var(--primary-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', border: '2px solid white' }}>
+              {user?.profileImage ? (
+                <img src={user.profileImage} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              ) : (
+                <div style={{ fontSize: 32, color: 'var(--primary)' }}>{user?.firstName?.[0] || 'U'}</div>
+              )}
             </div>
             <div>
               <h2 style={{ margin: 0 }}>{user?.firstName} {user?.lastName}</h2>
               <p className="muted" style={{ margin: '4px 0 0 0' }}>
                 {user?.email} {user?.city && <span>• From {user.city}{user.country ? `, ${user.country}` : ''}</span>}
               </p>
-              <button className="btn btn-ghost" style={{ marginTop: '12px' }}>
+              <label className="btn btn-ghost" style={{ marginTop: '12px', cursor: 'pointer' }}>
                 Change Avatar
-              </button>
+                <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleAvatarChange} />
+              </label>
             </div>
           </div>
 

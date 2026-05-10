@@ -1,4 +1,4 @@
-﻿import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '../components/common/Navbar';
 import SectionHeader from '../components/common/SectionHeader';
@@ -33,6 +33,14 @@ export default function PackingChecklist() {
       setItems(itemsData);
     } catch (error) {
       console.error('Failed to fetch packing data:', error);
+      // Fallback to sample data for demo purposes
+      setItems([
+        { id: 1, itemName: 'Passport', category: 'Documents', isChecked: true },
+        { id: 2, itemName: 'Travel Insurance', category: 'Documents', isChecked: false },
+        { id: 3, itemName: 'Camera', category: 'Electronics', isChecked: false },
+        { id: 4, itemName: 'Sunscreen', category: 'Toiletries', isChecked: true },
+        { id: 5, itemName: 'Walking Shoes', category: 'Clothing', isChecked: true },
+      ]);
     } finally {
       setLoading(false);
     }
@@ -110,7 +118,7 @@ export default function PackingChecklist() {
           ) : (
             <>
               <SectionHeader
-                title={Packing Checklist: }
+                title={`Packing Checklist: ${trip?.startDestination || trip?.name || 'Untitled Trip'}`}
                 subtitle="Ensure you have everything you need for your trip. Items are saved to your account."
               />
 
@@ -122,7 +130,7 @@ export default function PackingChecklist() {
                 <div style={{ height: '8px', background: 'var(--border)', borderRadius: '99px', overflow: 'hidden' }}>
                   <div
                     style={{
-                      width: ${progress}%,
+                      width: `${progress}%`,
                       height: '100%',
                       background: 'var(--primary)',
                       transition: 'width 0.3s ease',

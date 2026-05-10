@@ -113,6 +113,7 @@ export const authService = {
                 ...(data.city !== undefined && { city: data.city }),
                 ...(data.country !== undefined && { country: data.country }),
                 ...(data.additionalInfo !== undefined && { additionalInfo: data.additionalInfo }),
+                ...(data.profileImage !== undefined && { profileImage: data.profileImage }),
             },
             select: {
                 id: true,
@@ -124,6 +125,7 @@ export const authService = {
                 city: true,
                 country: true,
                 additionalInfo: true,
+                profileImage: true,
             },
         });
 

@@ -11,10 +11,10 @@ import * as budgetService from '../services/budgetService';
 const COLORS = ['#2563eb', '#06b6d4', '#7c3aed', '#f59e0b', '#10b981', '#ef4444'];
 
 const initialExpenses = [
-  { title: 'Flights to Paris', cost: '$820', category: 'Flights', note: 'Booked via Air France' },
-  { title: 'Hotel in Amsterdam', cost: '$560', category: 'Stays', note: '3 nights, canal view' },
-  { title: 'Bistro Tasting Menu', cost: '$140', category: 'Food', note: 'Paris, Le Marais' },
-  { title: 'Museum Tickets', cost: '$80', category: 'Activities', note: 'Louvre + Rijksmuseum' },
+  { title: 'Flights to Paris', cost: '₹820', category: 'Flights', note: 'Booked via Air France' },
+  { title: 'Hotel in Amsterdam', cost: '₹560', category: 'Stays', note: '3 nights, canal view' },
+  { title: 'Bistro Tasting Menu', cost: '₹140', category: 'Food', note: 'Paris, Le Marais' },
+  { title: 'Museum Tickets', cost: '₹80', category: 'Activities', note: 'Louvre + Rijksmuseum' },
 ];
 
 export default function BudgetPlanner() {
@@ -99,7 +99,7 @@ export default function BudgetPlanner() {
           totalAmount: Number(cost),
           title: title, // mock compat
           note: note, // mock compat
-          cost: `$${cost}`
+          cost: `₹${cost}`
         };
       }
 
@@ -159,7 +159,7 @@ export default function BudgetPlanner() {
                     />
                   </div>
                   <div>
-                    <label className="muted" style={{ fontSize: '13px', display: 'block', marginBottom: '6px' }}>Cost ($)</label>
+                    <label className="muted" style={{ fontSize: '13px', display: 'block', marginBottom: '6px' }}>Cost (₹)</label>
                     <input 
                       className="input" 
                       type="number" 
@@ -199,9 +199,9 @@ export default function BudgetPlanner() {
             </div>
           )}
           <div className="grid-3" style={{ marginBottom: '24px' }}>
-            <BudgetCard label="Total Budget" value={`$${totalBudget.toLocaleString()}`} note="For Paris + Amsterdam" />
-            <BudgetCard label="Spent So Far" value={`$${totalSpent.toLocaleString()}`} note="Updated today" />
-            <BudgetCard label="Remaining" value={`$${remaining.toLocaleString()}`} note="On track" />
+            <BudgetCard label="Total Budget" value={`₹${totalBudget.toLocaleString()}`} note="For Paris + Amsterdam" />
+            <BudgetCard label="Spent So Far" value={`₹${totalSpent.toLocaleString()}`} note="Updated today" />
+            <BudgetCard label="Remaining" value={`₹${remaining.toLocaleString()}`} note="On track" />
           </div>
 
           <div className="layout-asymmetric">
@@ -216,7 +216,7 @@ export default function BudgetPlanner() {
                         <div className="muted" style={{ fontSize: '13px' }}>{item.note || ''}</div>
                       </div>
                       <div style={{ textAlign: 'right' }}>
-                        <div className="tag tag-purple">{item.totalAmount ? `$${item.totalAmount}` : item.cost}</div>
+                        <div className="tag tag-purple">{item.totalAmount ? `₹${item.totalAmount}` : item.cost}</div>
                         <div className="muted" style={{ fontSize: '12px', marginTop: '4px' }}>{item.category}</div>
                       </div>
                     </div>
@@ -243,7 +243,7 @@ export default function BudgetPlanner() {
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
-                    <Tooltip formatter={(value) => `$${value}`} />
+                    <Tooltip formatter={(value) => `₹${value}`} />
                     <Legend iconType="circle" />
                   </PieChart>
                 </ResponsiveContainer>
