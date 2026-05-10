@@ -1,7 +1,7 @@
 import React from 'react';
-import Navbar from '../components/Navbar';
-import SectionHeader from '../components/SectionHeader';
-import BudgetCard from '../components/BudgetCard';
+import Navbar from '../components/common/Navbar';
+import SectionHeader from '../components/common/SectionHeader';
+import BudgetCard from '../components/budget/BudgetCard';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import { budgetSummary } from '../data/sampleBudget';
 import { FiPlus } from 'react-icons/fi';

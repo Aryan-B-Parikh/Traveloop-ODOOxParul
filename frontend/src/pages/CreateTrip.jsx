@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import Navbar from '../components/Navbar';
-import SectionHeader from '../components/SectionHeader';
+import Navbar from '../components/common/Navbar';
+import SectionHeader from '../components/common/SectionHeader';
 import { FiPlus, FiTrash } from 'react-icons/fi';
 
 export default function CreateTrip() {

@@ -1,10 +1,10 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
-import DestinationCard from '../components/DestinationCard';
-import SectionHeader from '../components/SectionHeader';
+import Navbar from '../components/common/Navbar';
+import Footer from '../components/common/Footer';
+import DestinationCard from '../components/destinations/DestinationCard';
+import SectionHeader from '../components/common/SectionHeader';
 import { sampleDestinations } from '../data/sampleDestinations';
 import { FiCompass, FiDollarSign, FiUsers, FiCheckSquare } from 'react-icons/fi';
 

@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
-import Navbar from '../components/Navbar';
-import SectionHeader from '../components/SectionHeader';
-import ChecklistItem from '../components/ChecklistItem';
+import Navbar from '../components/common/Navbar';
+import SectionHeader from '../components/common/SectionHeader';
+import ChecklistItem from '../components/checklist/ChecklistItem';
 import { checklistItems } from '../data/sampleChecklist';
 import { FiPlus } from 'react-icons/fi';
 

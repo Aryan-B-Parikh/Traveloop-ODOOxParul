@@ -1,8 +1,8 @@
 import React from 'react'
-import Navbar from '../components/Navbar'
-import SectionHeader from '../components/SectionHeader'
-import DestinationCard from '../components/DestinationCard'
-import ActivityCard from '../components/ActivityCard'
+import Navbar from '../components/common/Navbar'
+import SectionHeader from '../components/common/SectionHeader'
+import DestinationCard from '../components/destinations/DestinationCard'
+import ActivityCard from '../components/itinerary/ActivityCard'
 import { sampleDestinations } from '../data/sampleDestinations'
 import { sampleActivities } from '../data/sampleActivities'
 

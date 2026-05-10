@@ -1,8 +1,8 @@
 import React from 'react';
-import Navbar from '../components/Navbar';
-import SectionHeader from '../components/SectionHeader';
-import TripCard from '../components/TripCard';
-import StatCard from '../components/StatCard';
+import Navbar from '../components/common/Navbar';
+import SectionHeader from '../components/common/SectionHeader';
+import TripCard from '../components/trips/TripCard';
+import StatCard from '../components/ui/StatCard';
 import { sampleTrips } from '../data/sampleTrips';
 import { budgetSummary } from '../data/sampleBudget';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
