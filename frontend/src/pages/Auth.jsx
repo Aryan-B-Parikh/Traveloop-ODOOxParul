@@ -1,10 +1,18 @@
 import React, { useState } from 'react';
+import { Navigate } from 'react-router-dom';
 import Navbar from '../components/common/Navbar';
 import Footer from '../components/common/Footer';
 import AuthForm from '../components/auth/AuthForm';
+import { useAuth } from '../context/AuthContext';
 
 export default function Auth() {
   const [mode, setMode] = useState('login');
+  const { isAuthenticated } = useAuth();
+
+  // Already logged in → send straight to dashboard
+  if (isAuthenticated) {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
@@ -29,7 +37,8 @@ export default function Auth() {
               </h2>
             </div>
 
-            <div style={{ display: 'flex', gap: 10, marginBottom: 16, borderBottom: '1px solid var(--border)', paddingBottom: '16px' }}>
+            {/* Mode tabs */}
+            <div style={{ display: 'flex', gap: 10, marginBottom: 20, borderBottom: '1px solid var(--border)', paddingBottom: '16px' }}>
               <button
                 className={`btn btn-block ${mode === 'login' ? 'btn-primary' : 'btn-ghost'}`}
                 onClick={() => setMode('login')}

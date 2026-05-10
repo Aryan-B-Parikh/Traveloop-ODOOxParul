@@ -1,47 +1,164 @@
-import React, { useState } from 'react'
-import { Link } from 'react-router-dom'
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { FiLogOut, FiUser, FiChevronDown } from 'react-icons/fi';
+import { useAuth } from '../../context/AuthContext';
 
 export default function Navbar() {
-  const [menuOpen, setMenuOpen] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false);
+  const { user, isAuthenticated, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    setMenuOpen(false);
+    navigate('/auth');
+  };
+
+  const close = () => setMenuOpen(false);
 
   return (
-    <header className="container navbar">
+    <header className="container navbar" style={{ position: 'relative' }}>
       <div className="navbar-bar glass">
-        <div className="brand">
+        <Link to="/" className="brand" style={{ textDecoration: 'none' }}>
           <div className="logo">Traveloop</div>
           <div className="brand-tag">Journey OS</div>
-        </div>
+        </Link>
+
         <nav className="nav-links">
           <Link to="/explore">Explore</Link>
           <Link to="/itinerary">Itinerary</Link>
           <Link to="/budget">Budget</Link>
-          <Link to="/profile">Profile</Link>
-          <button
-            className="avatar"
-            onClick={() => setMenuOpen(!menuOpen)}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
-          >
-            <img src="https://i.pravatar.cc/150?img=32" alt="User avatar" />
-          </button>
+          <Link to="/community">Community</Link>
+
+          {isAuthenticated ? (
+            <button
+              className="avatar"
+              onClick={() => setMenuOpen(!menuOpen)}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', gap: 6 }}
+              title={user?.firstName ?? 'Account'}
+            >
+              <img
+                src={user?.avatar ?? 'https://i.pravatar.cc/150?img=32'}
+                alt={user?.firstName ?? 'User'}
+              />
+              <FiChevronDown size={14} style={{ color: 'var(--muted)' }} />
+            </button>
+          ) : (
+            <Link to="/auth" className="btn btn-primary" style={{ padding: '8px 16px' }}>
+              Sign In
+            </Link>
+          )}
         </nav>
       </div>
 
-      {menuOpen && (
-        <div className="card" style={{ position: 'absolute', top: '65px', right: '24px', width: '280px', padding: '16px', zIndex: 1000 }}>
-          <div style={{ fontSize: '14px', fontWeight: 700, marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid var(--border)' }}>
-            Planner
+      {/* Dropdown menu — only when authenticated + open */}
+      {isAuthenticated && menuOpen && (
+        <>
+          {/* Backdrop to close on outside click */}
+          <div
+            style={{ position: 'fixed', inset: 0, zIndex: 999 }}
+            onClick={close}
+          />
+          <div
+            className="card"
+            style={{
+              position: 'absolute',
+              top: '65px',
+              right: '24px',
+              width: '280px',
+              padding: '16px',
+              zIndex: 1000,
+            }}
+          >
+            {/* User info header */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 12,
+                paddingBottom: 14,
+                marginBottom: 14,
+                borderBottom: '1px solid var(--border)',
+              }}
+            >
+              <div className="avatar" style={{ width: 40, height: 40, flexShrink: 0 }}>
+                <img
+                  src={user?.avatar ?? 'https://i.pravatar.cc/150?img=32'}
+                  alt={user?.firstName}
+                />
+              </div>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: 14 }}>
+                  {user?.firstName} {user?.lastName}
+                </div>
+                <div style={{ fontSize: 12, color: 'var(--muted)' }}>{user?.email}</div>
+              </div>
+            </div>
+
+            {/* Nav links */}
+            <nav style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              {[
+                { to: '/dashboard', label: 'Dashboard' },
+                { to: '/create', label: 'Create Trip' },
+                { to: '/itinerary', label: 'Itinerary Builder' },
+                { to: '/explore', label: 'Destination Explorer' },
+                { to: '/budget', label: 'Budget Planner' },
+                { to: '/packing', label: 'Packing Checklist' },
+                { to: '/notes', label: 'Trip Notes' },
+              ].map(({ to, label }) => (
+                <Link
+                  key={to}
+                  to={to}
+                  className="muted"
+                  style={{ padding: '8px 12px', borderRadius: 8, fontSize: 14 }}
+                  onClick={close}
+                >
+                  {label}
+                </Link>
+              ))}
+            </nav>
+
+            {/* Divider */}
+            <div style={{ borderTop: '1px solid var(--border)', marginTop: 12, paddingTop: 12, display: 'grid', gap: 4 }}>
+              <Link
+                to="/profile"
+                className="muted"
+                style={{ padding: '8px 12px', borderRadius: 8, fontSize: 14, display: 'flex', alignItems: 'center', gap: 8 }}
+                onClick={close}
+              >
+                <FiUser size={14} /> My Profile
+              </Link>
+              <Link
+                to="/admin"
+                className="muted"
+                style={{ padding: '8px 12px', borderRadius: 8, fontSize: 14, display: 'flex', alignItems: 'center', gap: 8 }}
+                onClick={close}
+              >
+                Admin Dashboard
+              </Link>
+              <button
+                onClick={handleLogout}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: '8px 12px',
+                  borderRadius: 8,
+                  fontSize: 14,
+                  textAlign: 'left',
+                  color: '#dc2626',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  width: '100%',
+                }}
+              >
+                <FiLogOut size={14} /> Log Out
+              </button>
+            </div>
           </div>
-          <nav style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <Link to="/dashboard" className="muted" style={{ padding: '8px 12px', borderRadius: '8px', fontSize: '14px' }} onClick={() => setMenuOpen(false)}>Dashboard</Link>
-            <Link to="/create" className="muted" style={{ padding: '8px 12px', borderRadius: '8px', fontSize: '14px' }} onClick={() => setMenuOpen(false)}>Create Trip</Link>
-            <Link to="/itinerary" className="muted" style={{ padding: '8px 12px', borderRadius: '8px', fontSize: '14px' }} onClick={() => setMenuOpen(false)}>Itinerary Builder</Link>
-            <Link to="/explore" className="muted" style={{ padding: '8px 12px', borderRadius: '8px', fontSize: '14px' }} onClick={() => setMenuOpen(false)}>Destination Explorer</Link>
-            <Link to="/budget" className="muted" style={{ padding: '8px 12px', borderRadius: '8px', fontSize: '14px' }} onClick={() => setMenuOpen(false)}>Budget Planner</Link>
-            <Link to="/packing" className="muted" style={{ padding: '8px 12px', borderRadius: '8px', fontSize: '14px' }} onClick={() => setMenuOpen(false)}>Packing Checklist</Link>
-            <Link to="/profile" className="muted" style={{ padding: '8px 12px', borderRadius: '8px', fontSize: '14px' }} onClick={() => setMenuOpen(false)}>Profile</Link>
-          </nav>
-        </div>
+        </>
       )}
     </header>
-  )
+  );
 }

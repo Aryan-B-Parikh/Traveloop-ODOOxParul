@@ -13,6 +13,10 @@ export default function PackingChecklist() {
     setItems((prev) => prev.map((item) => (item.id === id ? { ...item, packed: !item.packed } : item)));
   };
 
+  const removeItem = (id) => {
+    setItems((prev) => prev.filter((item) => item.id !== id));
+  };
+
   const addItem = (e) => {
     e.preventDefault();
     if (!newItem.trim()) return;
@@ -91,7 +95,12 @@ export default function PackingChecklist() {
                 </h3>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                   {categoryItems.map((item) => (
-                    <ChecklistItem key={item.id} item={item} onToggle={() => toggleItem(item.id)} />
+                    <ChecklistItem 
+                      key={item.id} 
+                      item={item} 
+                      onToggle={() => toggleItem(item.id)} 
+                      onRemove={() => removeItem(item.id)}
+                    />
                   ))}
                 </div>
               </div>

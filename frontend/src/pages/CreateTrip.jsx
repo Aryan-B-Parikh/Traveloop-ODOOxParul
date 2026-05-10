@@ -1,10 +1,18 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/common/Navbar';
 import SectionHeader from '../components/common/SectionHeader';
 import { FiPlus, FiTrash } from 'react-icons/fi';
 
 export default function CreateTrip() {
+  const navigate = useNavigate();
   const [destinations, setDestinations] = useState(['Paris, France']);
+  const [tripName, setTripName] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [description, setDescription] = useState('');
+  const [budget, setBudget] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
 
   const addDestination = () => setDestinations([...destinations, '']);
   const updateDestination = (index, value) => {
@@ -17,6 +25,16 @@ export default function CreateTrip() {
     setDestinations(next);
   };
 
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setIsSaving(true);
+    // Simulate API call
+    setTimeout(() => {
+      setIsSaving(false);
+      navigate('/dashboard');
+    }, 1000);
+  };
+
   return (
     <div>
       <Navbar />
@@ -26,26 +44,49 @@ export default function CreateTrip() {
             title="Create a New Trip"
             subtitle="Map out your next adventure with all the essential details."
           />
-          <form className="card glass" style={{ padding: '28px', display: 'grid', gap: '20px' }}>
+          <form onSubmit={handleSubmit} className="card glass" style={{ padding: '28px', display: 'grid', gap: '20px' }}>
             <div>
               <label className="muted">Trip Name</label>
-              <input className="input" placeholder="e.g., Summer in Europe" required />
+              <input 
+                className="input" 
+                placeholder="e.g., Summer in Europe" 
+                value={tripName}
+                onChange={(e) => setTripName(e.target.value)}
+                required 
+              />
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
               <div>
                 <label className="muted">Start Date</label>
-                <input className="input" type="date" required />
+                <input 
+                  className="input" 
+                  type="date" 
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  required 
+                />
               </div>
               <div>
                 <label className="muted">End Date</label>
-                <input className="input" type="date" required />
+                <input 
+                  className="input" 
+                  type="date" 
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  required 
+                />
               </div>
             </div>
 
             <div>
               <label className="muted">Trip Description</label>
-              <textarea rows="3" placeholder="Describe the overall vibe, goals, and priorities for this trip." />
+              <textarea 
+                rows="3" 
+                placeholder="Describe the overall vibe, goals, and priorities for this trip." 
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+              />
             </div>
 
             <div>
@@ -83,7 +124,14 @@ export default function CreateTrip() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
               <div>
                 <label className="muted">Budget (USD)</label>
-                <input className="input" type="number" placeholder="4000" required />
+                <input 
+                  className="input" 
+                  type="number" 
+                  placeholder="4000" 
+                  value={budget}
+                  onChange={(e) => setBudget(e.target.value)}
+                  required 
+                />
               </div>
               <div>
                 <label className="muted">Cover Image</label>
@@ -91,8 +139,8 @@ export default function CreateTrip() {
               </div>
             </div>
 
-            <button className="btn btn-primary" type="submit" style={{ justifySelf: 'start', marginTop: '10px' }}>
-              Create & Continue
+            <button className="btn btn-primary" type="submit" disabled={isSaving} style={{ justifySelf: 'start', marginTop: '10px' }}>
+              {isSaving ? 'Creating...' : 'Create & Continue'}
             </button>
           </form>
         </main>
