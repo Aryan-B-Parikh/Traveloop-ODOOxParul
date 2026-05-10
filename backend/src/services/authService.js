@@ -43,9 +43,12 @@ export const authService = {
         return { user, token };
     },
 
-    async login(email, password) {
-        const user = await prisma.user.findUnique({
-            where: { email },
+    async login(identifier, password) {
+        // Allow login by email or username (identifier)
+        const user = await prisma.user.findFirst({
+            where: {
+                OR: [{ email: identifier }, { username: identifier }],
+            },
         });
 
         if (!user) {

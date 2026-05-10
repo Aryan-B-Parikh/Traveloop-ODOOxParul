@@ -48,22 +48,47 @@ export default function DestinationExplorer() {
     setSelectedActivity(activity);
   };
 
-  const handleSelectTrip = (trip) => {
-    // We would normally add it to the trip's itinerarySections here.
-    // For this prototype, we mock saving it as a saved activity on the trip object.
-    const updatedTrip = {
-      ...trip,
-      savedActivities: trip.savedActivities ? [...trip.savedActivities, selectedActivity] : [selectedActivity]
-    };
-    saveTrip(updatedTrip);
-    
-    // Show toast and close modal
-    setToastMessage(`Added "${selectedActivity.name}" to ${trip.name}!`);
-    setSelectedActivity(null);
-    
-    setTimeout(() => {
-      setToastMessage('');
-    }, 2500);
+  const handleSelectTrip = async (trip) => {
+    try {
+      // 1. Get existing sections
+      const sections = await itineraryService.getSections(trip.id);
+      
+      let targetSectionId;
+      if (sections && sections.length > 0) {
+        // Just pick the first section for simplicity in this "Add to Trip" flow
+        targetSectionId = sections[0].id;
+      } else {
+        // Create a default "Exploration" section using trip dates as fallback
+        const newSection = await itineraryService.createSection(trip.id, {
+          location: selectedActivity.city || 'Planned Activities',
+          sectionDateStart: trip.startDate || new Date().toISOString(),
+          sectionDateEnd: trip.endDate || new Date().toISOString(),
+          sectionBudget: 0,
+          description: 'Added from Destination Explorer'
+        });
+        targetSectionId = newSection.id;
+      }
+
+      // 2. Add activity to that section
+      await itineraryService.createActivity(trip.id, targetSectionId, {
+        name: selectedActivity.name,
+        city: selectedActivity.city || '',
+        cost: Number(selectedActivity.price.replace(/[^0-9.-]+/g,"")) || 0,
+        description: selectedActivity.description || ''
+      });
+
+      // Show success
+      setToastMessage(`Added "${selectedActivity.name}" to ${trip.name}!`);
+      setSelectedActivity(null);
+      
+      setTimeout(() => {
+        setToastMessage('');
+      }, 2500);
+    } catch (err) {
+      console.error('Failed to add to itinerary:', err);
+      setToastMessage('Error adding to itinerary. Please try again.');
+      setTimeout(() => setToastMessage(''), 3000);
+    }
   };
 
   return (
@@ -169,7 +194,7 @@ export default function DestinationExplorer() {
                   >
                     <div>
                       <div style={{ fontWeight: 600 }}>{trip.name}</div>
-                      <div className="muted" style={{ fontSize: '12px', marginTop: '2px' }}>{trip.dates}</div>
+                      <div className="muted" style={{ fontSize: '12px', marginTop: '2px' }}>{trip.dates || new Date(trip.startDate).toLocaleDateString()}</div>
                     </div>
                     <FiCheck className="muted" />
                   </button>

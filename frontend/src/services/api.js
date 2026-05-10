@@ -1,10 +1,10 @@
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 /**
  * Common fetch wrapper that handles JSON and Auth headers
  */
 export async function apiRequest(endpoint, options = {}) {
-  const token = localStorage.getItem('traveloop_token');
+  const token = localStorage.getItem('token');
   
   const headers = {
     'Content-Type': 'application/json',

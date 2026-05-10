@@ -9,6 +9,44 @@ import {
 } from 'react-icons/fi';
 import * as itineraryService from '../services/itineraryService';
 
+function toDateInputValue(value) {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toISOString().slice(0, 10);
+}
+
+function formatDateRangeDisplay(startValue, endValue) {
+  const start = startValue ? new Date(startValue) : null;
+  const end = endValue ? new Date(endValue) : null;
+
+  if (!start || !end || Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+    return 'Set dates';
+  }
+
+  return `${start.toLocaleDateString()} - ${end.toLocaleDateString()}`;
+}
+
+function normalizeSection(section) {
+  const sectionId = section.sectionId ?? section.id;
+  const sectionDateStart = toDateInputValue(section.sectionDateStart);
+  const sectionDateEnd = toDateInputValue(section.sectionDateEnd);
+
+  return {
+    ...section,
+    sectionId,
+    sectionDateStart,
+    sectionDateEnd,
+    dateRange: section.dateRange || formatDateRangeDisplay(sectionDateStart, sectionDateEnd),
+    sectionBudget: Number(section.sectionBudget || 0),
+    activities: (section.activities || []).map((activity) => ({
+      ...activity,
+      activityId: activity.activityId ?? activity.id,
+      cost: Number(activity.cost || 0),
+    })),
+  };
+}
+
 // ── Stat card ─────────────────────────────────────────────────────────────────
 function StatCard({ label, value, note, children }) {
   return (
@@ -49,7 +87,7 @@ function ActivityRow({ activity, onMoveUp, onMoveDown, onRemove, isFirst, isLast
           <div className="activity-desc">{activity.city} — {activity.description}</div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
-          <div className="tag tag-purple">₹{activity.cost}</div>
+          <div className="tag tag-purple">&#8377;{activity.cost}</div>
           <div className="activity-actions">
             <button title="Move up" onClick={onMoveUp} disabled={isFirst} style={isFirst ? { opacity: 0.3, cursor: 'default' } : {}}>
               <FiChevronUp />
@@ -71,7 +109,8 @@ function ActivityRow({ activity, onMoveUp, onMoveDown, onRemove, isFirst, isLast
 function SectionEditor({ section, onSave, onCancel }) {
   const [draft, setDraft] = useState({
     location: section.location,
-    dateRange: section.dateRange,
+    sectionDateStart: section.sectionDateStart || toDateInputValue(section.sectionDateStart),
+    sectionDateEnd: section.sectionDateEnd || toDateInputValue(section.sectionDateEnd),
     sectionBudget: section.sectionBudget,
   });
 
@@ -83,6 +122,9 @@ function SectionEditor({ section, onSave, onCancel }) {
 
   const handleSave = () => {
     if (!draft.location.trim()) return;
+    if (!draft.sectionDateStart || !draft.sectionDateEnd) return;
+    if (new Date(draft.sectionDateStart) > new Date(draft.sectionDateEnd)) return;
+
     onSave(draft);
   };
 
@@ -112,23 +154,36 @@ function SectionEditor({ section, onSave, onCancel }) {
           />
         </div>
 
-        {/* Date range */}
+        {/* Start date */}
         <div>
           <label className="muted" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>
-            <FiCalendar size={11} style={{ marginRight: 4 }} />Date Range
+            <FiCalendar size={11} style={{ marginRight: 4 }} />Start Date
           </label>
           <input
             className="input"
-            value={draft.dateRange}
-            onChange={set('dateRange')}
-            placeholder="e.g. Jun 14 – Jun 16"
+            type="date"
+            value={draft.sectionDateStart}
+            onChange={set('sectionDateStart')}
+          />
+        </div>
+
+        {/* End date */}
+        <div>
+          <label className="muted" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>
+            <FiCalendar size={11} style={{ marginRight: 4 }} />End Date
+          </label>
+          <input
+            className="input"
+            type="date"
+            value={draft.sectionDateEnd}
+            onChange={set('sectionDateEnd')}
           />
         </div>
 
         {/* Budget */}
-        <div>
+        <div style={{ gridColumn: '1 / -1' }}>
           <label className="muted" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>
-            <span style={{ marginRight: 4 }}>₹</span>Section Budget (₹)
+            <span style={{ marginRight: 4 }}>&#8377;</span>Section Budget (&#8377;)
           </label>
           <input
             className="input"
@@ -217,11 +272,11 @@ export default function ItineraryBuilder() {
     const fetchSections = async () => {
       try {
         const data = await itineraryService.getSections(tripId);
-        setSections(data || []);
+        setSections((data || []).map(normalizeSection));
       } catch (err) {
         console.error(err);
         // Fallback to sample data if backend fails or trip 1 doesn't exist
-        setSections(itinerarySections);
+        setSections((itinerarySections || []).map(normalizeSection));
         setError('Failed to load itinerary sections from server. Showing local preview.');
       } finally {
         setIsLoading(false);
@@ -301,11 +356,18 @@ export default function ItineraryBuilder() {
   // ── Save edited section details ─────────────────────────────────────────────
   const saveSection = async (sectionId, updatedFields) => {
     try {
+      let updatedFromServer = null;
       if (!String(sectionId).startsWith('s')) {
-        await itineraryService.updateSection(tripId, sectionId, updatedFields);
+        updatedFromServer = await itineraryService.updateSection(tripId, sectionId, updatedFields);
       }
+
+      const nextSection = normalizeSection({
+        ...(updatedFromServer || {}),
+        ...updatedFields,
+      });
+
       setSections((prev) =>
-        prev.map((s) => (s.sectionId === sectionId ? { ...s, ...updatedFields } : s))
+        prev.map((s) => (s.sectionId === sectionId ? { ...s, ...nextSection, dateRange: formatDateRangeDisplay(nextSection.sectionDateStart, nextSection.sectionDateEnd) } : s))
       );
       setEditingId(null);
     } catch {
@@ -316,9 +378,11 @@ export default function ItineraryBuilder() {
   // ── Add placeholder section ─────────────────────────────────────────────────
   const addSection = async () => {
     try {
+      const today = new Date().toISOString().slice(0, 10);
       const newSectionData = {
-        dateRange: 'Set dates',
         location: 'New Destination',
+        sectionDateStart: today,
+        sectionDateEnd: today,
         sectionBudget: 0,
       };
       
@@ -326,7 +390,7 @@ export default function ItineraryBuilder() {
       let newSection;
       try {
         newSection = await itineraryService.createSection(tripId, newSectionData);
-        newSection.activities = []; // API might return empty or omit activities array
+        newSection = normalizeSection({ ...newSection, activities: newSection.activities || [] });
       } catch (err) {
         console.error('API failed, using local mock ID:', err.message);
         // Fallback if backend isn't running or trip doesn't exist
@@ -334,8 +398,13 @@ export default function ItineraryBuilder() {
           sectionId: `s${Date.now()}`,
           tripId: tripId,
           ...newSectionData,
+          dateRange: formatDateRangeDisplay(today, today),
           activities: [],
         };
+      }
+
+      if (!newSection.dateRange) {
+        newSection.dateRange = formatDateRangeDisplay(newSection.sectionDateStart, newSection.sectionDateEnd);
       }
 
       setSections((prev) => [...prev, newSection]);
@@ -393,12 +462,8 @@ export default function ItineraryBuilder() {
           {/* Summary stats */}
           <div className="grid-3" style={{ marginBottom: '28px' }}>
             <StatCard label="Destinations" value={sections.length} note={`${totalActivities} activities planned`} />
-            <StatCard
-              label="Budget Allocated"
-              value={`₹${totalBudget.toLocaleString()}`}
-              note={`₹${totalSpent.toLocaleString()} activity costs so far`}
-            />
-            <StatCard label="Budget Remaining" value={`₹${(totalBudget - totalSpent).toLocaleString()}`} note="On track">
+            <StatCard label="Total Planned" value={<>&#8377;{totalBudget.toLocaleString()}</>} note={<>&#8377;{totalSpent.toLocaleString()} activity costs so far</>} />
+            <StatCard label="Budget Remaining" value={<>&#8377;{(totalBudget - totalSpent).toLocaleString()}</>} note="On track">
               <div className="progress-bar" style={{ marginTop: '10px' }}>
                 <div
                   className="progress-fill"
@@ -509,9 +574,9 @@ export default function ItineraryBuilder() {
                       <span className="section-badge section-badge-date">
                         <FiCalendar size={12} /> {section.dateRange}
                       </span>
-                      <span className="section-badge section-badge-budget">
-                        <span style={{ marginRight: 4 }}>₹</span> {section.sectionBudget.toLocaleString()}
-                      </span>
+                      <div className="section-badge section-badge-budget">
+                        <span style={{ marginRight: 4 }}>&#8377;</span> {section.sectionBudget.toLocaleString()}
+                      </div>
                       <span className="section-badge section-badge-count">
                         <FiMapPin size={12} /> {section.activities.length} stops
                       </span>

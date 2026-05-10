@@ -40,8 +40,13 @@ export const signupValidation = [
 export const loginValidation = [
     body('email')
         .trim()
-        .isEmail()
-        .withMessage('Invalid email address'),
+        .custom((value) => {
+            // Accept either a valid email or a username (min length 3)
+            const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+            const isUsername = typeof value === 'string' && value.trim().length >= 3;
+            if (isEmail || isUsername) return true;
+            throw new Error('Provide a valid email address or username');
+        }),
     body('password')
         .isLength({ min: 8 })
         .withMessage('Invalid credentials'),

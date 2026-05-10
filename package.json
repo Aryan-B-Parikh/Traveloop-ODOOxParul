@@ -1,0 +1,12 @@
+{
+  "name": "traveloop-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev:all": "concurrently \"npm --prefix backend run dev\" \"npm --prefix frontend run start\"",
+    "start:all": "npm run dev:all"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.0"
+  }
+}

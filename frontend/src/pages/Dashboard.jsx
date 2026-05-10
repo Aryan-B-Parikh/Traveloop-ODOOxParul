@@ -7,11 +7,19 @@ import TripCard from '../components/trips/TripCard';
 import StatCard from '../components/ui/StatCard';
 import { getTrips as getLocalTrips, deleteTrip as deleteLocalTrip } from '../data/tripStore';
 import * as tripService from '../services/tripService';
-import { budgetSummary } from '../data/sampleBudget';
+import * as budgetService from '../services/budgetService';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { FiPlus } from 'react-icons/fi';
 
 const COLORS = ['#2563eb', '#06b6d4', '#7c3aed', '#38bdf8', '#94a3b8'];
+const CATEGORY_LABELS = {
+  ACCOMMODATION: 'Accommodation',
+  TRANSPORTATION: 'Transportation',
+  FOOD: 'Food',
+  ACTIVITIES: 'Activities',
+  SHOPPING: 'Shopping',
+  MISCELLANEOUS: 'Miscellaneous',
+};
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -19,6 +27,10 @@ export default function Dashboard() {
   const [trips, setTrips] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [selectedTripId, setSelectedTripId] = useState('ALL');
+  const [budgetBreakdown, setBudgetBreakdown] = useState([]);
+  const [budgetTotals, setBudgetTotals] = useState({ total: 0, count: 0 });
+  const [isBudgetLoading, setIsBudgetLoading] = useState(false);
 
   useEffect(() => {
     const fetchTrips = async () => {
@@ -34,6 +46,67 @@ export default function Dashboard() {
     };
     fetchTrips();
   }, []);
+
+  useEffect(() => {
+    const fetchBudgetBreakdown = async () => {
+      if (!trips.length) {
+        setBudgetBreakdown([]);
+        setBudgetTotals({ total: 0, count: 0 });
+        return;
+      }
+
+      setIsBudgetLoading(true);
+
+      try {
+        let aggregatedTotal = 0;
+        let aggregatedCount = 0;
+        const aggregatedByCategory = {};
+
+        if (selectedTripId === 'ALL') {
+          const summaries = await Promise.all(
+            trips.map((trip) =>
+              budgetService.getExpenseSummary(trip.id).catch(() => ({ total: 0, byCategory: {}, count: 0 }))
+            )
+          );
+
+          summaries.forEach((summary) => {
+            aggregatedTotal += Number(summary?.total || 0);
+            aggregatedCount += Number(summary?.count || 0);
+
+            Object.entries(summary?.byCategory || {}).forEach(([category, amount]) => {
+              aggregatedByCategory[category] = (aggregatedByCategory[category] || 0) + Number(amount || 0);
+            });
+          });
+        } else {
+          const summary = await budgetService.getExpenseSummary(selectedTripId);
+          aggregatedTotal = Number(summary?.total || 0);
+          aggregatedCount = Number(summary?.count || 0);
+
+          Object.entries(summary?.byCategory || {}).forEach(([category, amount]) => {
+            aggregatedByCategory[category] = Number(amount || 0);
+          });
+        }
+
+        const chartData = Object.entries(aggregatedByCategory)
+          .map(([category, value]) => ({
+            name: CATEGORY_LABELS[category] || category,
+            value,
+          }))
+          .sort((a, b) => b.value - a.value);
+
+        setBudgetBreakdown(chartData);
+        setBudgetTotals({ total: aggregatedTotal, count: aggregatedCount });
+      } catch (err) {
+        console.error('Failed to load budget breakdown:', err);
+        setBudgetBreakdown([]);
+        setBudgetTotals({ total: 0, count: 0 });
+      } finally {
+        setIsBudgetLoading(false);
+      }
+    };
+
+    fetchBudgetBreakdown();
+  }, [selectedTripId, trips]);
 
   /* ── Delete flow ── */
   const handleDeleteRequest = (id) => {
@@ -111,28 +184,51 @@ export default function Dashboard() {
 
           <aside>
             <div className="card subtle-glass" style={{ padding: '18px' }}>
-              <h3>Global Budget Breakdown</h3>
-              <p className="muted" style={{ fontSize: '12px' }}>Total across all active trips</p>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
+                <h3 style={{ margin: 0 }}>Budget Breakdown</h3>
+                <select
+                  className="input"
+                  style={{ width: '170px' }}
+                  value={selectedTripId}
+                  onChange={(e) => setSelectedTripId(e.target.value)}
+                >
+                  <option value="ALL">All Trips</option>
+                  {trips.map((trip) => (
+                    <option key={trip.id} value={trip.id}>
+                      {trip.name || trip.startDestination || `Trip #${trip.id}`}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <p className="muted" style={{ fontSize: '12px' }}>
+                {selectedTripId === 'ALL' ? 'Total across all active trips' : 'Selected trip only'}
+              </p>
               <div style={{ height: 300 }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={budgetSummary.categories}
-                      dataKey="value"
-                      nameKey="name"
-                      innerRadius={60}
-                      outerRadius={90}
-                      paddingAngle={5}
-                      cornerRadius={8}
-                    >
-                      {budgetSummary.categories.map((_, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                    <Legend verticalAlign="bottom" height={36} iconType="circle" />
-                  </PieChart>
-                </ResponsiveContainer>
+                {isBudgetLoading ? (
+                  <div className="muted" style={{ paddingTop: '40px' }}>Loading budget data...</div>
+                ) : budgetBreakdown.length === 0 ? (
+                  <div className="muted" style={{ paddingTop: '40px' }}>No expense data yet for this selection.</div>
+                ) : (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={budgetBreakdown}
+                        dataKey="value"
+                        nameKey="name"
+                        innerRadius={60}
+                        outerRadius={90}
+                        paddingAngle={5}
+                        cornerRadius={8}
+                      >
+                        {budgetBreakdown.map((_, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip formatter={(value) => `₹${Number(value).toLocaleString()}`} />
+                      <Legend verticalAlign="bottom" height={36} iconType="circle" />
+                    </PieChart>
+                  </ResponsiveContainer>
+                )}
               </div>
             </div>
             <div className="card subtle-glass" style={{ padding: '18px', marginTop: '20px' }}>
@@ -140,14 +236,14 @@ export default function Dashboard() {
               <div style={{ display: 'grid', gap: 12, marginTop: 12 }}>
                 <StatCard label="Active trips" value={String(trips.length)} hint={trips.length > 0 ? `Next: ${trips[0].startDestination || trips[0].name}` : 'Create one!'} />
                 <StatCard
-                  label="Total budget"
-                  value={`₹${budgetSummary.total}`}
-                  hint="Across active trips"
+                  label="Total Expenses"
+                  value={<>&#8377;{budgetTotals.total.toLocaleString()}</>}
+                  hint={selectedTripId === 'ALL' ? 'Across active trips' : 'Selected trip'}
                 />
                 <StatCard
-                  label="Spent so far"
-                  value={`₹${budgetSummary.spent}`}
-                  hint="Updated 4 mins ago"
+                  label="Expense Entries"
+                  value={String(budgetTotals.count)}
+                  hint="From saved backend data"
                 />
               </div>
             </div>

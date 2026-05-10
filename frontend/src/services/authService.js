@@ -2,6 +2,32 @@ import apiClient from './apiClient';
 
 const SESSION_KEY = 'traveloop_session';
 
+function extractApiErrorMessage(error, fallbackMessage) {
+  if (error?.response?.data?.message) {
+    return error.response.data.message;
+  }
+
+  if (error?.response?.data?.error) {
+    const detailMessage = error.response.data.details?.[0]?.message;
+    return detailMessage || error.response.data.error;
+  }
+
+  return fallbackMessage;
+}
+
+function buildUsername({ firstName, lastName, email }) {
+  const emailLocalPart = (email || '').split('@')[0].replace(/[^a-zA-Z0-9_]/g, '');
+  const namePart = `${firstName || ''}${lastName || ''}`.replace(/[^a-zA-Z0-9_]/g, '');
+  let username = emailLocalPart || namePart || 'user';
+
+  // Backend validation requires min length 3 for username.
+  if (username.length < 3) {
+    username = `${username}${namePart || 'traveloop'}`;
+  }
+
+  return username.slice(0, 100);
+}
+
 /** Retrieve the stored session from localStorage (or null). */
 export function getStoredSession() {
   try {
@@ -36,10 +62,7 @@ export async function login({ email, password }) {
     saveSession(session);
     return session;
   } catch (error) {
-    if (error.response && error.response.data && error.response.data.message) {
-      throw new Error(error.response.data.message);
-    }
-    throw new Error('An error occurred during login. Please try again.');
+    throw new Error(extractApiErrorMessage(error, 'An error occurred during login. Please try again.'));
   }
 }
 
@@ -49,17 +72,14 @@ export async function login({ email, password }) {
  */
 export async function register({ firstName, lastName, email, password }) {
   try {
-    const username = email.split('@')[0];
+    const username = buildUsername({ firstName, lastName, email });
     const response = await apiClient.post('/auth/signup', { firstName, lastName, email, password, username });
     const { user, token } = response.data.data;
     const session = { token, user };
     saveSession(session);
     return session;
   } catch (error) {
-    if (error.response && error.response.data && error.response.data.message) {
-      throw new Error(error.response.data.message);
-    }
-    throw new Error('An error occurred during registration. Please try again.');
+    throw new Error(extractApiErrorMessage(error, 'An error occurred during registration. Please try again.'));
   }
 }
 
@@ -81,10 +101,7 @@ export async function updateProfile(updatedFields) {
 
     return { user };
   } catch (error) {
-    if (error.response && error.response.data && error.response.data.message) {
-      throw new Error(error.response.data.message);
-    }
-    throw new Error('Failed to update profile.');
+    throw new Error(extractApiErrorMessage(error, 'Failed to update profile.'));
   }
 }
 

@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
@@ -34,7 +34,8 @@ export default function App() {
         <Route path="/dashboard"         element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/create"            element={<ProtectedRoute><CreateTrip /></ProtectedRoute>} />
         <Route path="/edit/:id"          element={<ProtectedRoute><EditTrip /></ProtectedRoute>} />
-        <Route path="/explore"           element={<ProtectedRoute><DestinationExplorer /></ProtectedRoute>} />
+        <Route path="/destination-explorer" element={<ProtectedRoute><DestinationExplorer /></ProtectedRoute>} />
+        <Route path="/budget"           element={<ProtectedRoute><BudgetPlanner /></ProtectedRoute>} />
         <Route path="/itinerary/:tripId" element={<ProtectedRoute><ItineraryBuilder /></ProtectedRoute>} />
         <Route path="/budget/:tripId"    element={<ProtectedRoute><BudgetPlanner /></ProtectedRoute>} />
         <Route path="/packing/:tripId"   element={<ProtectedRoute><PackingChecklist /></ProtectedRoute>} />

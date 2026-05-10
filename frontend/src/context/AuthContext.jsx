@@ -16,6 +16,13 @@ export function AuthProvider({ children }) {
 
   /** Call after a successful login / register response. */
   const handleAuthSuccess = useCallback((newSession) => {
+    // Persist session to localStorage so apiClient can read the token
+    try {
+      localStorage.setItem('traveloop_session', JSON.stringify(newSession));
+      if (newSession?.token) localStorage.setItem('token', newSession.token);
+    } catch (e) {
+      // ignore storage errors
+    }
     setSession(newSession);
   }, []);
 

@@ -26,11 +26,13 @@ export default function Navbar() {
 
         <nav className="nav-links">
           <Link to="/dashboard">Dashboard</Link>
+          <Link to="/budget">Budget Planner</Link>
           <Link to="/destination-explorer">Explore</Link>
           <Link to="/community">Community</Link>
           <Link to="/admin">Admin Panel</Link>
 
           {isAuthenticated ? (
+                { to: '/budget', label: '💰 Budget Planner' },
             <button
               className="avatar"
               onClick={() => setMenuOpen(!menuOpen)}

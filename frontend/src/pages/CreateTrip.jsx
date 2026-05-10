@@ -192,7 +192,7 @@ export default function CreateTrip() {
             {/* Budget + Cover */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
               <div>
-                <label className="muted">Budget (₹)</label>
+                <label className="muted">Budget (&#8377;)</label>
                 <input
                   className="input"
                   type="number"

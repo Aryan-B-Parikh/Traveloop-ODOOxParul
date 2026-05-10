@@ -3,7 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 
-import config from './config/index.js';
+import config, { isCorsOriginAllowed } from './config/index.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 
 import authRoutes from './routes/authRoutes.js';
@@ -17,18 +17,25 @@ app.use(helmet());
 
 app.use(
     cors({
-        origin: config.cors.origin,
+        origin: (origin, callback) => {
+            if (isCorsOriginAllowed(origin, config.nodeEnv)) {
+                return callback(null, true);
+            }
+
+            return callback(new Error('Not allowed by CORS'));
+        },
         credentials: true,
     }),
 );
 
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ limit: '10mb', extended: true }));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 const limiter = rateLimit({
     windowMs: config.rateLimit.windowMs,
     max: config.rateLimit.maxRequests,
     message: 'Too many requests from this IP, please try again later.',
+    skip: () => config.nodeEnv === 'development',
 });
 
 app.use(limiter);

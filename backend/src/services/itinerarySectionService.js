@@ -14,8 +14,8 @@ export const itinerarySectionService = {
             data: {
                 tripId,
                 location: sectionData.location,
-                sectionDateStart: new Date(sectionData.sectionDateStart),
-                sectionDateEnd: new Date(sectionData.sectionDateEnd),
+                sectionDateStart: sectionData.sectionDateStart ? new Date(sectionData.sectionDateStart) : new Date(),
+                sectionDateEnd: sectionData.sectionDateEnd ? new Date(sectionData.sectionDateEnd) : new Date(),
                 sectionBudget: sectionData.sectionBudget || 0,
                 description: sectionData.description || null,
             },

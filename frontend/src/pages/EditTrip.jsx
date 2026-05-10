@@ -294,7 +294,7 @@ export default function EditTrip() {
 
             {/* Budget */}
             <div style={{ maxWidth: '340px' }}>
-              <label className="muted">Budget (₹)</label>
+              <label className="muted">Budget (&#8377;)</label>
               <input
                 className="input"
                 type="number"
