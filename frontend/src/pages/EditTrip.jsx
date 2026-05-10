@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '../components/common/Navbar';
 import SectionHeader from '../components/common/SectionHeader';
-import { saveTrip, formatDateRange } from '../data/tripStore';
-import { FiPlus, FiTrash, FiCheck } from 'react-icons/fi';
+import { getTrip, saveTrip, deleteTrip, formatDateRange } from '../data/tripStore';
+import { FiPlus, FiTrash, FiCheck, FiAlertCircle } from 'react-icons/fi';
 
-export default function CreateTrip() {
+export default function EditTrip() {
+  const { id } = useParams();
   const navigate = useNavigate();
 
   /* ── Form state ── */
@@ -15,8 +16,29 @@ export default function CreateTrip() {
   const [description, setDescription] = useState('');
   const [budget, setBudget] = useState('');
   const [destinations, setDestinations] = useState(['']);
+  const [status, setStatus] = useState('Draft');
   const [errors, setErrors] = useState({});
   const [toast, setToast] = useState(false);
+  const [notFound, setNotFound] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+  /* ── Load trip on mount ── */
+  useEffect(() => {
+    const trip = getTrip(id);
+    if (!trip) {
+      setNotFound(true);
+      return;
+    }
+    setName(trip.name || '');
+    setStartDate(trip.startDate || '');
+    setEndDate(trip.endDate || '');
+    setDescription(trip.description || '');
+    setBudget(trip.budget ? String(trip.budget) : '');
+    setStatus(trip.status || 'Draft');
+    setDestinations(
+      trip.destination ? trip.destination.split(',').map((d) => d.trim()) : ['']
+    );
+  }, [id]);
 
   /* ── Destination list management ── */
   const addDestination = () => setDestinations([...destinations, '']);
@@ -44,12 +66,13 @@ export default function CreateTrip() {
     return Object.keys(errs).length === 0;
   };
 
-  /* ── Submit ── */
+  /* ── Submit (update) ── */
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!validate()) return;
 
-    const trip = {
+    saveTrip({
+      id,
       name: name.trim(),
       destination: destinations.filter((d) => d.trim()).join(', '),
       startDate,
@@ -57,15 +80,39 @@ export default function CreateTrip() {
       dates: formatDateRange(startDate, endDate),
       description: description.trim(),
       budget: Number(budget) || 0,
-      status: 'Draft',
-    };
+      status,
+    });
 
-    saveTrip(trip);
-
-    // Show success toast, then redirect
     setToast(true);
     setTimeout(() => navigate('/dashboard'), 1200);
   };
+
+  /* ── Delete ── */
+  const handleDelete = () => {
+    deleteTrip(id);
+    navigate('/dashboard');
+  };
+
+  /* ── Not found state ── */
+  if (notFound) {
+    return (
+      <div>
+        <Navbar />
+        <div className="container section">
+          <div className="empty-state fade-up">
+            <div className="empty-state-icon">
+              <FiAlertCircle />
+            </div>
+            <h3>Trip not found</h3>
+            <p>We couldn't find a trip with this ID. It may have been deleted.</p>
+            <button className="btn btn-primary" onClick={() => navigate('/dashboard')}>
+              Back to Dashboard
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -73,8 +120,18 @@ export default function CreateTrip() {
       <div className="container section">
         <main style={{ maxWidth: '720px', margin: '0 auto' }}>
           <SectionHeader
-            title="Create a New Trip"
-            subtitle="Map out your next adventure with all the essential details."
+            title="Edit Trip"
+            subtitle="Update the details for your adventure."
+            action={
+              <button
+                className="btn btn-danger"
+                type="button"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}
+                onClick={() => setShowDeleteModal(true)}
+              >
+                <FiTrash /> Delete Trip
+              </button>
+            }
           />
           <form
             className="card glass"
@@ -93,6 +150,18 @@ export default function CreateTrip() {
                 required
               />
               {errors.name && <div className="field-error">{errors.name}</div>}
+            </div>
+
+            {/* Status */}
+            <div>
+              <label className="muted">Status</label>
+              <select className="input" value={status} onChange={(e) => setStatus(e.target.value)}>
+                <option value="Draft">Draft</option>
+                <option value="Planned">Planned</option>
+                <option value="Upcoming">Upcoming</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Completed">Completed</option>
+              </select>
             </div>
 
             {/* Date Range */}
@@ -167,26 +236,20 @@ export default function CreateTrip() {
               </button>
             </div>
 
-            {/* Budget + Cover */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-              <div>
-                <label className="muted">Budget (USD)</label>
-                <input
-                  className="input"
-                  type="number"
-                  placeholder="4000"
-                  value={budget}
-                  onChange={(e) => setBudget(e.target.value)}
-                />
-              </div>
-              <div>
-                <label className="muted">Cover Image</label>
-                <input className="input" type="file" />
-              </div>
+            {/* Budget */}
+            <div style={{ maxWidth: '340px' }}>
+              <label className="muted">Budget (USD)</label>
+              <input
+                className="input"
+                type="number"
+                placeholder="4000"
+                value={budget}
+                onChange={(e) => setBudget(e.target.value)}
+              />
             </div>
 
             <button className="btn btn-primary" type="submit" style={{ justifySelf: 'start', marginTop: '10px' }}>
-              Create & Continue
+              Save Changes
             </button>
           </form>
         </main>
@@ -196,7 +259,25 @@ export default function CreateTrip() {
       {toast && (
         <div className="toast toast-success">
           <span className="toast-icon"><FiCheck /></span>
-          Trip created! Redirecting to dashboard…
+          Trip updated! Redirecting…
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="modal-backdrop" onClick={() => setShowDeleteModal(false)}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+            <h3>Delete this trip?</h3>
+            <p>This action cannot be undone. All trip data including itinerary sections and activities will be permanently removed.</p>
+            <div className="modal-actions">
+              <button className="btn btn-ghost" onClick={() => setShowDeleteModal(false)}>
+                Cancel
+              </button>
+              <button className="btn btn-danger" onClick={handleDelete}>
+                <FiTrash style={{ marginRight: '6px' }} /> Delete
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

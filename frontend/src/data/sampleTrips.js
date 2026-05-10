@@ -1,26 +1,50 @@
 export const sampleTrips = [
   {
-    id: 1,
+    id: 'trip-1',
     name: 'Paris + Amsterdam Escape',
     destination: 'France, Netherlands',
-    dates: 'Jun 08 - Jun 18',
+    startDate: '2026-06-08',
+    endDate: '2026-06-18',
+    dates: 'Jun 08 – Jun 18',
     status: 'Upcoming',
-    desc: 'Museums, canals, and a slow-food itinerary.'
+    description: 'Museums, canals, and a slow-food itinerary.',
+    budget: 4200,
+    image: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?q=80&w=600',
+    participants: [
+      { name: 'Maya', avatar: 'https://i.pravatar.cc/150?img=32' },
+      { name: 'Leo', avatar: 'https://i.pravatar.cc/150?img=12' },
+    ],
   },
   {
-    id: 2,
+    id: 'trip-2',
     name: 'Bali Wellness Week',
     destination: 'Indonesia',
-    dates: 'Jul 22 - Jul 30',
+    startDate: '2026-07-22',
+    endDate: '2026-07-30',
+    dates: 'Jul 22 – Jul 30',
     status: 'Draft',
-    desc: 'Beachside villas, yoga mornings, surf afternoons.'
+    description: 'Beachside villas, yoga mornings, surf afternoons.',
+    budget: 3100,
+    image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=600',
+    participants: [
+      { name: 'Maya', avatar: 'https://i.pravatar.cc/150?img=32' },
+    ],
   },
   {
-    id: 3,
+    id: 'trip-3',
     name: 'Kyoto Culture Trail',
     destination: 'Japan',
-    dates: 'Oct 02 - Oct 11',
+    startDate: '2026-10-02',
+    endDate: '2026-10-11',
+    dates: 'Oct 02 – Oct 11',
     status: 'Planned',
-    desc: 'Tea ceremonies, lantern walks, and art markets.'
-  }
-]
+    description: 'Tea ceremonies, lantern walks, and art markets.',
+    budget: 5500,
+    image: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?q=80&w=600',
+    participants: [
+      { name: 'Maya', avatar: 'https://i.pravatar.cc/150?img=32' },
+      { name: 'Leo', avatar: 'https://i.pravatar.cc/150?img=12' },
+      { name: 'Ava', avatar: 'https://i.pravatar.cc/150?img=5' },
+    ],
+  },
+];

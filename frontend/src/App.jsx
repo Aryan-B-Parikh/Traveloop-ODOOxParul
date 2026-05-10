@@ -4,6 +4,7 @@ import Landing from './pages/Landing'
 import Auth from './pages/Auth'
 import Dashboard from './pages/Dashboard'
 import CreateTrip from './pages/CreateTrip'
+import EditTrip from './pages/EditTrip'
 import DestinationExplorer from './pages/DestinationExplorer'
 import ItineraryBuilder from './pages/ItineraryBuilder'
 import BudgetPlanner from './pages/BudgetPlanner'
@@ -17,6 +18,7 @@ export default function App() {
       <Route path="/auth" element={<Auth />} />
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/create" element={<CreateTrip />} />
+      <Route path="/edit/:id" element={<EditTrip />} />
       <Route path="/explore" element={<DestinationExplorer />} />
       <Route path="/itinerary" element={<ItineraryBuilder />} />
       <Route path="/budget" element={<BudgetPlanner />} />
@@ -25,3 +27,4 @@ export default function App() {
     </Routes>
   )
 }
+

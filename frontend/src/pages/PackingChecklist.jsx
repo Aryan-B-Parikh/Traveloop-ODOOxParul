@@ -13,6 +13,10 @@ export default function PackingChecklist() {
     setItems((prev) => prev.map((item) => (item.id === id ? { ...item, packed: !item.packed } : item)));
   };
 
+  const removeItem = (id) => {
+    setItems((prev) => prev.filter((item) => item.id !== id));
+  };
+
   const addItem = (e) => {
     e.preventDefault();
     if (!newItem.trim()) return;
@@ -27,6 +31,7 @@ export default function PackingChecklist() {
   };
 
   const progress = useMemo(() => {
+    if (items.length === 0) return 0;
     const packedCount = items.filter((item) => item.packed).length;
     return Math.round((packedCount / items.length) * 100);
   }, [items]);
@@ -84,6 +89,11 @@ export default function PackingChecklist() {
           </form>
 
           <div style={{ display: 'grid', gap: '24px' }}>
+            {Object.keys(groupedItems).length === 0 && (
+              <div className="muted" style={{ textAlign: 'center', padding: '40px 0' }}>
+                Your packing list is empty. Add some items above!
+              </div>
+            )}
             {Object.entries(groupedItems).map(([category, categoryItems]) => (
               <div key={category} className="card" style={{ padding: '20px' }}>
                 <h3 style={{ borderBottom: '1px solid var(--border)', paddingBottom: '10px', marginBottom: '10px' }}>
@@ -91,7 +101,12 @@ export default function PackingChecklist() {
                 </h3>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                   {categoryItems.map((item) => (
-                    <ChecklistItem key={item.id} item={item} onToggle={() => toggleItem(item.id)} />
+                    <ChecklistItem 
+                      key={item.id} 
+                      item={item} 
+                      onToggle={() => toggleItem(item.id)} 
+                      onRemove={() => removeItem(item.id)}
+                    />
                   ))}
                 </div>
               </div>
